@@ -730,7 +730,8 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
   const [searchRunning, setSearchRunning] = useState(false);
-  const [activeMainTab, setActiveMainTab] = useState('directory'); // 'directory' or 'memory'
+  const [layoutMode, setLayoutMode] = useState('cosmic'); // 'cosmic' or 'flat'
+  const [activeMainTab, setActiveMainTab] = useState('directory'); // 'directory' or 'memory' (for flat mode)
   const [memory, setMemory] = useState({ nodes: {}, edges: [], updated_at: null });
   
   // Data state
@@ -743,14 +744,36 @@ export default function App() {
   
   // Logs console state
   const [logs, setLogs] = useState([
-    { text: 'ScholarFlow Supervisor Agent ready.', type: 'greet' },
+    { text: 'Subspace cosmic navigator ready.', type: 'greet' },
     { text: 'Upload your academic resume to launch search...', type: 'gray' }
   ]);
   
   const consoleEndRef = useRef(null);
   const splashCanvasRef = useRef(null);
 
-  // Load theme and initial candidate profile
+  // Stellar System orbit rotation tick
+  const [orbitAngle, setOrbitAngle] = useState(0);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const width = 1200;
+  const height = 800;
+  const cx = width / 2;
+  const cy = height / 2;
+
+  // Real-time animation frame loop
+  useEffect(() => {
+    let frameId;
+    const animate = () => {
+      setOrbitAngle(prev => (prev + 0.0018) % (Math.PI * 2));
+      frameId = requestAnimationFrame(animate);
+    };
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
+  // Sync theme
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add('dark-mode');
@@ -781,7 +804,7 @@ export default function App() {
         if (data.candidate && data.candidate.name) {
           setCandidateProfile(data.candidate);
           setSupervisors(data.matches || []);
-          addLog("Loaded cached supervisor finder matches from supervisor_matches.json", "log");
+          addLog("Loaded cached supervisor matches from supervisor_matches.json", "log");
         }
       })
       .catch(err => {
@@ -810,13 +833,12 @@ export default function App() {
     canvas.width = w;
     canvas.height = h;
     
-    // Abstract grid symbol particles representing ScholarFlow logo (cap/cube structure)
     const particlePoints = [
-      { x: 0, y: -20 }, { x: -30, y: 0 }, { x: 30, y: 0 }, { x: 0, y: 20 }, // diamond core
-      { x: -60, y: 0 }, { x: 60, y: 0 }, // extremities
-      { x: -30, y: -40 }, { x: 30, y: -40 }, // upper horns
-      { x: 0, y: -60 }, // apex
-      { x: 0, y: 60 } // bottom tassel
+      { x: 0, y: -20 }, { x: -30, y: 0 }, { x: 30, y: 0 }, { x: 0, y: 20 },
+      { x: -60, y: 0 }, { x: 60, y: 0 },
+      { x: -30, y: -40 }, { x: 30, y: -40 },
+      { x: 0, y: -60 },
+      { x: 0, y: 60 }
     ];
     
     const particles = particlePoints.map(p => {
@@ -849,7 +871,7 @@ export default function App() {
       particles.forEach((p, idx) => {
         if (frame > p.delay) {
           const t = Math.min(1, (frame - p.delay) / convergeDuration);
-          const ease = 1 - Math.pow(1 - t, 4); // Quartic ease out
+          const ease = 1 - Math.pow(1 - t, 4);
           p.x = p.x + (p.tx - p.x) * ease;
           p.y = p.y + (p.ty - p.y) * ease;
           if (t < 1) allConverged = false;
@@ -859,21 +881,19 @@ export default function App() {
         ctx.fillText(p.char, p.x, p.y);
       });
       
-      // Draw text
       if (frame > 40) {
         const textFade = Math.min(1, (frame - 40) / 30);
         ctx.fillStyle = `rgba(242, 242, 242, ${textFade})`;
-        ctx.font = "600 14px 'Space Grotesk', sans-serif";
-        ctx.fillText("SCHOLARFLOW", w / 2, h / 2 + 190);
+        ctx.font = "600 15px 'Space Grotesk', sans-serif";
+        ctx.fillText("SUBSPACE", w / 2, h / 2 + 190);
         ctx.font = "400 10px 'JetBrains Mono', monospace";
         ctx.fillStyle = `rgba(109, 109, 109, ${textFade})`;
-        ctx.fillText("AGENTIC RESEARCH HUB", w / 2, h / 2 + 215);
+        ctx.fillText("COSMIC PROFILE MAPPER", w / 2, h / 2 + 215);
       }
       
       frame++;
       
       if (allConverged && frame > convergeDuration + holdDuration) {
-        // Trigger Glitch phase
         let glitchFrame = 0;
         const drawGlitch = () => {
           ctx.clearRect(0, 0, w, h);
@@ -887,7 +907,6 @@ export default function App() {
           if (flash > 0.05) {
             ctx.fillStyle = `rgba(255, 0, 0, ${flash * 0.8})`;
             particles.forEach(p => ctx.fillText(p.char, p.tx + split, p.ty));
-            
             ctx.fillStyle = `rgba(0, 0, 255, ${flash * 0.8})`;
             particles.forEach(p => ctx.fillText(p.char, p.tx - split, p.ty));
           }
@@ -901,11 +920,11 @@ export default function App() {
           });
           
           ctx.fillStyle = `rgba(242, 242, 242, 0.95)`;
-          ctx.font = "600 14px 'Space Grotesk', sans-serif";
-          ctx.fillText("SCHOLARFLOW", w / 2, h / 2 + 190);
+          ctx.font = "600 15px 'Space Grotesk', sans-serif";
+          ctx.fillText("SUBSPACE", w / 2, h / 2 + 190);
           ctx.font = "400 10px 'JetBrains Mono', monospace";
           ctx.fillStyle = `rgba(109, 109, 109, 0.95)`;
-          ctx.fillText("AGENTIC RESEARCH HUB", w / 2, h / 2 + 215);
+          ctx.fillText("COSMIC PROFILE MAPPER", w / 2, h / 2 + 215);
           
           glitchFrame++;
           if (glitchFrame < glitchDuration) {
@@ -940,7 +959,6 @@ export default function App() {
     setLogs(prev => [...prev, { text, type }]);
   };
 
-  // Trigger file upload and backend parsing
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -961,8 +979,7 @@ export default function App() {
         return res.json();
       })
       .then(data => {
-        addLog(`File successfully uploaded & saved to: ${data.saved_path}`, 'log');
-        // Trigger Search automatically
+        addLog(`File successfully uploaded to: ${data.saved_path}`, 'log');
         triggerSupervisorSearch(data.saved_path);
       })
       .catch(err => {
@@ -970,7 +987,6 @@ export default function App() {
       });
   };
 
-  // Trigger search pipeline via WebSockets
   const triggerSupervisorSearch = (savedPath) => {
     setSearchRunning(true);
     setLogs([]);
@@ -993,7 +1009,7 @@ export default function App() {
         setSearchRunning(false);
         setCandidateProfile(data.data.candidate);
         setSupervisors(data.data.matches);
-        addLog(`Pipeline complete! Found and parsed ${data.data.matches.length} matching supervisors.`, 'greet');
+        addLog(`Pipeline complete! Map populated.`, 'greet');
         playSuccessSound();
         fetchMemory();
         ws.close();
@@ -1015,7 +1031,6 @@ export default function App() {
     };
   };
 
-  // Email draft editor drawer
   const openEmailModal = (prof) => {
     playClickSound();
     setSelectedProf(prof);
@@ -1034,40 +1049,167 @@ export default function App() {
     alert("Email body copied to clipboard!");
   };
 
+  // Cosmic layout math
+  const getOrbitPosition = (node, index, total, angleOffset) => {
+    let radius = 0;
+    let speedMult = 1;
+    if (node.label === 'Interest') {
+      radius = 160;
+      speedMult = 1.25;
+    } else if (node.label === 'University') {
+      radius = 280;
+      speedMult = 0.75;
+    } else if (node.label === 'Professor') {
+      radius = 410;
+      speedMult = 0.4;
+    } else {
+      return { x: cx, y: cy };
+    }
+    const baseAngle = (index / (total || 1)) * Math.PI * 2;
+    const currentAngle = baseAngle + angleOffset * speedMult;
+    return {
+      x: cx + Math.cos(currentAngle) * radius,
+      y: cy + Math.sin(currentAngle) * radius,
+      radius
+    };
+  };
+
+  const { coordsMap, renderedNodes } = useMemo(() => {
+    const coordsMap = {};
+    if (!memory || !memory.nodes) return { coordsMap, renderedNodes: [] };
+
+    let candNodeId = null;
+    const interests = [];
+    const universities = [];
+    const professors = [];
+
+    Object.keys(memory.nodes).forEach(key => {
+      const node = memory.nodes[key];
+      if (node.label === 'Candidate') candNodeId = key;
+      else if (node.label === 'Interest') interests.push(node);
+      else if (node.label === 'University') universities.push(node);
+      else if (node.label === 'Professor') professors.push(node);
+    });
+
+    if (candNodeId) {
+      coordsMap[candNodeId] = { x: cx, y: cy };
+    }
+
+    const orbitalNodes = [];
+    interests.forEach((node, idx) => {
+      orbitalNodes.push({ node, index: idx, total: interests.length });
+    });
+    universities.forEach((node, idx) => {
+      orbitalNodes.push({ node, index: idx, total: universities.length });
+    });
+    professors.forEach((node, idx) => {
+      orbitalNodes.push({ node, index: idx, total: professors.length });
+    });
+
+    const renderedNodes = orbitalNodes.map(item => {
+      const pos = getOrbitPosition(item.node, item.index, item.total, orbitAngle);
+      coordsMap[item.node.id] = pos;
+      return {
+        ...item.node,
+        x: pos.x,
+        y: pos.y,
+        radius: pos.radius
+      };
+    });
+
+    return { coordsMap, renderedNodes };
+  }, [memory, orbitAngle]);
+
+  const neighborNodeIds = useMemo(() => {
+    if (!hoveredNode) return new Set();
+    const neighbors = new Set([hoveredNode.id]);
+    memory.edges.forEach(e => {
+      if (e.source === hoveredNode.id) neighbors.add(e.target);
+      if (e.target === hoveredNode.id) neighbors.add(e.source);
+    });
+    return neighbors;
+  }, [hoveredNode, memory.edges]);
+
+  const filteredNodes = useMemo(() => {
+    if (!searchQuery.trim()) return renderedNodes;
+    const q = searchQuery.toLowerCase();
+    return renderedNodes.filter(n => {
+      const name = (n.properties?.name || n.id).toLowerCase();
+      const label = n.label.toLowerCase();
+      return name.includes(q) || label.includes(q);
+    });
+  }, [renderedNodes, searchQuery]);
+
+  const filteredNodeIds = useMemo(() => new Set(filteredNodes.map(n => n.id)), [filteredNodes]);
+
+  const visibleEdges = useMemo(() => {
+    return memory.edges.filter(edge => {
+      return coordsMap[edge.source] && coordsMap[edge.target];
+    });
+  }, [memory.edges, coordsMap]);
+
+  const getNodeColor = (label) => {
+    switch (label) {
+      case 'Candidate': return 'var(--gl-black)';
+      case 'Interest': return '#8B5CF6';
+      case 'University': return '#10B981';
+      case 'Professor': return '#F59E0B';
+      default: return '#6D6D6D';
+    }
+  };
+
+  const connections = useMemo(() => {
+    if (!selectedNode) return [];
+    return memory.edges
+      .filter(e => e.source === selectedNode.id || e.target === selectedNode.id)
+      .map(e => {
+        const otherId = e.source === selectedNode.id ? e.target : e.source;
+        const otherNode = memory.nodes[otherId];
+        return {
+          relation: e.relation,
+          node: otherNode,
+          isSource: e.source === selectedNode.id
+        };
+      });
+  }, [selectedNode, memory]);
+
+  const selectedSupervisorFullData = useMemo(() => {
+    if (!selectedNode || selectedNode.label !== 'Professor') return null;
+    return supervisors.find(s => s.name.toLowerCase() === selectedNode.properties?.name?.toLowerCase());
+  }, [selectedNode, supervisors]);
+
   return (
     <>
-      {/* Splash Screen */}
       {showSplash && (
         <div className={`gl-splash ${splashFade ? 'slide-up' : ''}`}>
           <canvas ref={splashCanvasRef} className="gl-splash-canvas" />
-          <div className="gl-splash-fallback">INITIALIZING SYSTEM...</div>
+          <div className="gl-splash-fallback">SUBSPACE CONSOLE INITIALIZING...</div>
         </div>
       )}
 
-      {/* Main Layout */}
       <div id="root">
         <header className="app-header">
           <div className="logo-container" onClick={() => { playClickSound(); }}>
             <span className="logo-dot"></span>
-            ScholarFlow
-            <span className="logo-subtitle">Supervisor Agent</span>
+            SUBSPACE
+            <span className="logo-subtitle">Cosmic Agent Navigator</span>
           </div>
           
           <ul className="nav-links">
             <li>
               <button 
-                className={`nav-btn ${activeMainTab === 'directory' ? 'active' : ''}`}
-                onClick={() => { playClickSound(); setActiveMainTab('directory'); }}
+                className={`nav-btn ${layoutMode === 'cosmic' ? 'active' : ''}`}
+                onClick={() => { playClickSound(); setLayoutMode('cosmic'); }}
               >
-                📁 Directory
+                🌌 Cosmic Map
               </button>
             </li>
             <li>
               <button 
-                className={`nav-btn ${activeMainTab === 'memory' ? 'active' : ''}`}
-                onClick={() => { playClickSound(); setActiveMainTab('memory'); }}
+                className={`nav-btn ${layoutMode === 'flat' ? 'active' : ''}`}
+                onClick={() => { playClickSound(); setLayoutMode('flat'); }}
               >
-                🧠 Agent Memory
+                📁 Directory List
               </button>
             </li>
             <li>
@@ -1078,141 +1220,477 @@ export default function App() {
           </ul>
         </header>
 
-        <main className="main-content">
-          {/* Hero Header */}
-          <section className="hero-section">
-            <span className="hero-label">Autonomous Academic Agent</span>
-            <h1 className="hero-title">Find Your <em>Research Supervisor</em></h1>
-            <p className="hero-description">
-              Upload your academic resume, portfolio, or statement of purpose. ScholarFlow will autonomously parse your profile, 
-              conduct a global web search using Google grounding, fetch publication indexes from OpenAlex, evaluate compatibility, 
-              and write tailored cold email drafts.
-            </p>
-          </section>
-
-          {/* Unified Dashboard Grid */}
-          <div className="dashboard-grid">
-            
-            {/* Sidebar Column: Intake, Profile, & Live Logs */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {layoutMode === 'cosmic' ? (
+          <div className="space-viewport">
+            {/* Left HUD Panel */}
+            <div className="hud-panel hud-panel-left">
+              <h3 className="hud-title">Intake & Controls</h3>
               
-              {/* Controls card */}
-              <div className="card">
-                <h3 className="card-title">Intake & Controls</h3>
-                
-                <div className="form-group">
-                  <span className="form-label">Step 1: Upload Portfolio / Resume</span>
-                  <label className="file-uploader">
-                    <input 
-                      type="file" 
-                      accept=".pdf,.txt,.md" 
-                      onChange={handleFileUpload} 
-                      style={{ display: 'none' }} 
-                    />
-                    <div className="file-uploader-icon">📂</div>
-                    <div className="file-uploader-text">
-                      {uploadedFile ? uploadedFile : "Drag & drop PDF/TXT or Click to browse"}
-                    </div>
-                  </label>
-                </div>
-
-                {candidateProfile && (
-                  <div style={{ marginTop: '24px', animation: 'fadeIn 0.4s ease-out' }}>
-                    <span className="form-label">Parsed Academic Profile</span>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{candidateProfile.name}</p>
-                    <p style={{ color: 'var(--gl-gray)', fontSize: '0.85rem' }}>Stage: {candidateProfile.academic_level}</p>
-                    
-                    <span className="form-label" style={{ marginTop: '16px' }}>Research Domains</span>
-                    <div className="profile-pill-container">
-                      {candidateProfile.research_interests.map((interest, idx) => (
-                        <span key={idx} className="profile-pill">{interest}</span>
-                      ))}
-                    </div>
+              <div className="form-group">
+                <span className="form-label">Upload Portfolio / Resume</span>
+                <label className="file-uploader" style={{ padding: '20px 10px' }}>
+                  <input 
+                    type="file" 
+                    accept=".pdf,.txt,.md" 
+                    onChange={handleFileUpload} 
+                    style={{ display: 'none' }} 
+                  />
+                  <div className="file-uploader-icon" style={{ fontSize: '1.4rem', marginBottom: '4px' }}>📂</div>
+                  <div className="file-uploader-text" style={{ fontSize: '0.8rem' }}>
+                    {uploadedFile ? uploadedFile : "PDF / TXT / MD File"}
                   </div>
-                )}
-
-                {uploadedFile && (
-                  <button 
-                    className="btn" 
-                    style={{ marginTop: '24px' }}
-                    onClick={() => triggerSupervisorSearch(uploadedFile)}
-                    disabled={searchRunning}
-                  >
-                    {searchRunning ? 'Searching...' : 'Re-Run Search Pipeline'}
-                  </button>
-                )}
+                </label>
               </div>
 
-              {/* Integrated Sidebar Terminal (Visual Command Center) */}
-              <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '380px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className={`console-pulse-dot ${searchRunning ? 'running' : ''}`} />
-                    Agent Logs Terminal
-                  </h4>
-                  <button 
-                    onClick={() => { playClickSound(); setLogs([{ text: 'Console cleared.', type: 'gray' }]); }}
-                    className="btn btn-secondary" 
-                    style={{ width: 'auto', padding: '4px 8px', fontSize: '0.7rem', textTransform: 'none' }}
-                  >
-                    Clear
-                  </button>
+              {candidateProfile && (
+                <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                  <span className="form-label">Navigator: {candidateProfile.name}</span>
+                  <div className="profile-pill-container" style={{ maxHeight: '80px', overflowY: 'auto' }}>
+                    {candidateProfile.research_interests.map((interest, idx) => (
+                      <span key={idx} className="profile-pill" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>{interest}</span>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ flex: 1, backgroundColor: '#090d16', borderRadius: '8px', padding: '14px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.74rem', lineHeight: '1.45', color: '#c5c9db' }}>
+              )}
+
+              {/* Console log window inside Left HUD */}
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                <span className="form-label">Subspace Log Stream</span>
+                <div style={{ flex: 1, backgroundColor: '#090d16', borderRadius: '8px', padding: '12px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', lineHeight: '1.4', color: '#c5c9db' }}>
                   {logs.map((log, idx) => (
-                    <div key={idx} className={`console-line console-${log.type}`} style={{ marginBottom: '5px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                    <div key={idx} className={`console-line console-${log.type}`} style={{ marginBottom: '4px' }}>
                       {log.text}
                     </div>
                   ))}
                   <div ref={consoleEndRef} />
                 </div>
               </div>
-
             </div>
 
-            {/* Main Column: directory or memory graph */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {activeMainTab === 'directory' ? (
-                <>
-                  <h3 className="card-title" style={{ marginBottom: '0px' }}>
-                    {supervisors.length > 0 ? `Matched Supervisors (${supervisors.length})` : "Matched Directory"}
-                  </h3>
-                  
-                  {supervisors.length === 0 ? (
-                    <div className="card" style={{ textAlign: 'center', padding: '80px', color: 'var(--gl-gray)', display: 'flex', flexDirection: 'column', justify: 'center', alignItems: 'center', minHeight: '350px' }}>
-                      <span style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</span>
-                      Awaiting candidate portfolio upload to begin search...
+            {/* Orbit Constellation SVG Canvas */}
+            <svg viewBox="0 0 1200 800" className="space-svg">
+              {/* Star background patterns */}
+              <defs>
+                <pattern id="dotGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1.2" className="space-svg-grid-dot" />
+                </pattern>
+                <marker id="cosmicArrow" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--gl-gray)" opacity="0.3" />
+                </marker>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dotGrid)" style={{ opacity: 0.8 }} />
+
+              {/* Orbiting concentric guides */}
+              <circle cx={cx} cy={cy} r="160" fill="none" stroke="var(--gl-border)" strokeWidth="0.8" strokeDasharray="5,8" style={{ opacity: 0.4 }} />
+              <circle cx={cx} cy={cy} r="280" fill="none" stroke="var(--gl-border)" strokeWidth="0.8" strokeDasharray="5,8" style={{ opacity: 0.4 }} />
+              <circle cx={cx} cy={cy} r="410" fill="none" stroke="var(--gl-border)" strokeWidth="0.8" strokeDasharray="5,8" style={{ opacity: 0.4 }} />
+
+              {/* Stellar gravitational edges */}
+              {visibleEdges.map((edge, idx) => {
+                const from = coordsMap[edge.source];
+                const to = coordsMap[edge.target];
+                if (!from || !to) return null;
+
+                const isSelected = selectedNode && (selectedNode.id === edge.source || selectedNode.id === edge.target);
+                const isGraphHovered = hoveredNode !== null;
+                const isEdgeConnectedToHover = hoveredNode && (hoveredNode.id === edge.source || hoveredNode.id === edge.target);
+                
+                const isSearching = searchQuery.trim().length > 0;
+                const isHighlighted = isSearching 
+                  ? filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
+                  : (isGraphHovered ? isEdgeConnectedToHover : isSelected);
+
+                let edgeOpacity = 0.22;
+                if (isSearching) {
+                  edgeOpacity = isHighlighted ? 0.9 : 0.08;
+                } else if (isGraphHovered) {
+                  edgeOpacity = isEdgeConnectedToHover ? 0.9 : 0.04;
+                } else if (isSelected) {
+                  edgeOpacity = 0.95;
+                }
+
+                return (
+                  <line 
+                    key={idx}
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
+                    className={isHighlighted ? "flow-line" : ""}
+                    stroke={isHighlighted ? 'var(--gl-black)' : 'var(--gl-gray)'}
+                    strokeWidth={isHighlighted ? 2.5 : 1}
+                    strokeOpacity={edgeOpacity}
+                    markerEnd="url(#cosmicArrow)"
+                    style={{ transition: 'stroke-opacity 0.2s ease, stroke-width 0.2s ease, stroke 0.2s ease' }}
+                  />
+                );
+              })}
+
+              {/* Candidate Center Star Node */}
+              <g transform={`translate(${cx}, ${cy})`} style={{ cursor: 'pointer' }} onClick={() => { playClickSound(); setSelectedNode(memory.nodes[Object.keys(memory.nodes).find(k => memory.nodes[k].label === 'Candidate')]); }}>
+                <circle r="44" fill="none" stroke="var(--gl-black)" strokeWidth="0.8" strokeDasharray="4,4" className="node-orbit" style={{ opacity: 0.15 }} />
+                <circle r="36" fill="none" stroke="var(--gl-black)" strokeWidth="1.2" strokeDasharray="8,4" className="node-orbit-counter" style={{ opacity: 0.25 }} />
+                
+                <circle 
+                  r="24" 
+                  fill="var(--gl-black)" 
+                  stroke="var(--gl-light)" 
+                  strokeWidth="3.5" 
+                  style={{ filter: 'drop-shadow(0px 0px 15px rgba(0,0,0,0.2))' }}
+                />
+                <text textAnchor="middle" y="5" fontSize="13" fill="var(--gl-light)" fontWeight="bold">☼</text>
+                <text textAnchor="middle" y="-55" fontSize="11" fontWeight="bold" fill="var(--gl-black)" style={{ letterSpacing: '0.05em' }}>
+                  {candidateProfile?.name ? candidateProfile.name.toUpperCase() : "NAVIGATOR"}
+                </text>
+                <text textAnchor="middle" y="-43" fontSize="8" fill="var(--gl-gray)" style={{ letterSpacing: '0.08em' }}>
+                  SUN CORE
+                </text>
+              </g>
+
+              {/* Orbital planet nodes */}
+              {renderedNodes.map((node, idx) => {
+                const isSelected = selectedNode && selectedNode.id === node.id;
+                const isSearching = searchQuery.trim().length > 0;
+                const isFiltered = isSearching && !filteredNodeIds.has(node.id);
+                
+                const isGraphHovered = hoveredNode !== null;
+                const isNeighbor = neighborNodeIds.has(node.id);
+                
+                let nodeOpacity = 1;
+                if (isFiltered) {
+                  nodeOpacity = 0.15;
+                } else if (isGraphHovered && !isNeighbor) {
+                  nodeOpacity = 0.18;
+                }
+
+                const nodeColor = getNodeColor(node.label);
+
+                return (
+                  <g 
+                    key={node.id}
+                    transform={`translate(${node.x}, ${node.y})`}
+                    style={{ cursor: 'pointer' }}
+                    onMouseDown={() => { playClickSound(); setSelectedNode(node); }}
+                    onPointerOver={() => { playHoverSound(); setHoveredNode(node); }}
+                    onPointerOut={() => setHoveredNode(null)}
+                  >
+                    {(isSelected || (hoveredNode && hoveredNode.id === node.id)) && (
+                      <>
+                        <circle r="32" fill="none" stroke={nodeColor} strokeWidth="1.2" strokeDasharray="5,4" className="node-orbit" style={{ opacity: nodeOpacity * 0.7 }} />
+                        <circle r="26" fill="none" stroke={nodeColor} strokeWidth="0.8" strokeDasharray="3,5" className="node-orbit-counter" style={{ opacity: nodeOpacity * 0.5 }} />
+                      </>
+                    )}
+                    
+                    <polygon 
+                      points={isSelected ? "0,-20 20,0 0,20 -20,0" : "0,-14 14,0 0,14 -14,0"}
+                      fill={nodeColor}
+                      stroke="var(--gl-light)"
+                      strokeWidth="3"
+                      style={{ 
+                        opacity: nodeOpacity,
+                        filter: isSelected ? 'drop-shadow(0px 4px 12px rgba(0,0,0,0.3))' : 'drop-shadow(0px 2px 6px rgba(0,0,0,0.12))',
+                        transition: 'points 0.2s ease, opacity 0.2s ease'
+                      }}
+                    />
+                    <text
+                      y="26"
+                      textAnchor="middle"
+                      fontSize="10"
+                      fontWeight={isSelected ? 'bold' : '600'}
+                      fill="var(--gl-black)"
+                      style={{ 
+                        opacity: nodeOpacity,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                        fontFamily: 'var(--font-sans)',
+                        transition: 'opacity 0.2s ease'
+                      }}
+                    >
+                      {node.properties?.name || node.id}
+                    </text>
+                    {isSelected && (
+                      <text
+                        y="-22"
+                        textAnchor="middle"
+                        fontSize="8"
+                        fontWeight="bold"
+                        fill={nodeColor}
+                        style={{ pointerEvents: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                      >
+                        {node.label}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Right HUD Panel: Planetary Inspector */}
+            <div className="hud-panel hud-panel-right">
+              <div className="hud-scrollable-content">
+                {selectedNode ? (
+                  <div className="animate-fade-in">
+                    <span className="hero-label" style={{ color: getNodeColor(selectedNode.label), fontWeight: 'bold' }}>
+                      {selectedNode.label} Coordinate
+                    </span>
+                    <h3 className="inspector-title" style={{ fontSize: '1.4rem', marginTop: '6px' }}>
+                      {selectedNode.properties?.name || selectedNode.id}
+                    </h3>
+                    
+                    <div className="prof-divider" style={{ margin: '14px 0' }} />
+
+                    <div className="inspector-properties">
+                      {selectedNode.label === 'Candidate' && (
+                        <div className="prop-row">
+                          <span className="prop-key">Academic Stage</span>
+                          <span className="prop-value">{selectedNode.properties?.academic_level || '—'}</span>
+                        </div>
+                      )}
+
+                      {selectedNode.label === 'Professor' && (
+                        <>
+                          <div className="prop-row">
+                            <span className="prop-key">Department</span>
+                            <span className="prop-value">{selectedNode.properties?.department || '—'}</span>
+                          </div>
+                          <div className="prop-row">
+                            <span className="prop-key">Citations</span>
+                            <span className="prop-value">{selectedNode.properties?.citations || '—'}</span>
+                          </div>
+                          <div className="prop-row">
+                            <span className="prop-key">H-Index</span>
+                            <span className="prop-value">{selectedNode.properties?.h_index || '—'}</span>
+                          </div>
+                          {selectedSupervisorFullData && (
+                            <div className="prop-row">
+                              <span className="prop-key" style={{ color: 'var(--gl-black)' }}>Match Score</span>
+                              <span className="prop-value" style={{ color: '#F59E0B', fontWeight: 800 }}>
+                                {selectedSupervisorFullData.match_analysis?.score || 0}%
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {selectedNode.label === 'University' && (
+                        <div className="prop-row">
+                          <span className="prop-key">Institution</span>
+                          <span className="prop-value">{selectedNode.properties?.name || '—'}</span>
+                        </div>
+                      )}
+
+                      {selectedNode.label === 'Interest' && (
+                        <div className="prop-row">
+                          <span className="prop-key">Research Subfield</span>
+                          <span className="prop-value">{selectedNode.properties?.name || '—'}</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="results-grid">
-                      {supervisors.map((prof) => (
-                        <SupervisorCard 
-                          key={prof.id} 
-                          prof={prof} 
-                          onOpenEmail={openEmailModal} 
-                          playHoverSound={playHoverSound} 
-                          playClickSound={playClickSound} 
-                        />
-                      ))}
+
+                    {selectedNode.label === 'Professor' && selectedSupervisorFullData && (
+                      <div style={{ marginTop: '16px', animation: 'fadeIn 0.3s ease-out' }}>
+                        <span className="form-label">Stellar Overlap</span>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--gl-gray)', lineHeight: '1.4', marginBottom: '12px' }}>
+                          {selectedSupervisorFullData.match_analysis?.research_overlap}
+                        </p>
+                        
+                        <span className="form-label">Research Direction</span>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--gl-gray)', fontStyle: 'italic', lineHeight: '1.4', marginBottom: '16px' }}>
+                          {selectedSupervisorFullData.match_analysis?.custom_research_direction}
+                        </p>
+
+                        <button 
+                          className="btn" 
+                          style={{ padding: '10px 16px', fontSize: '0.8rem' }}
+                          onClick={() => openEmailModal(selectedSupervisorFullData)}
+                        >
+                          Draft Outreach Proposal
+                        </button>
+                      </div>
+                    )}
+
+                    <h4 className="relations-header">Gravity Relations</h4>
+                    {connections.length > 0 ? (
+                      <ul className="relations-list">
+                        {connections.map((conn, idx) => {
+                          if (!conn.node) return null;
+                          const nodeColor = getNodeColor(conn.node.label);
+                          return (
+                            <li key={idx} className="relation-item">
+                              <span className="relation-badge" style={{ borderLeft: `3px solid ${nodeColor}`, minWidth: '90px' }}>
+                                {conn.relation}
+                              </span>
+                              <div 
+                                className="relation-dest" 
+                                onClick={() => { 
+                                  playClickSound(); 
+                                  const targetNode = renderedNodes.find(n => n.id === conn.node.id) || (conn.node.label === 'Candidate' ? memory.nodes[conn.node.id] : null);
+                                  if (targetNode) {
+                                    // Map candidate center node correctly
+                                    if (targetNode.label === 'Candidate') {
+                                      setSelectedNode({ id: conn.node.id, label: 'Candidate', properties: conn.node.properties });
+                                    } else {
+                                      setSelectedNode(targetNode);
+                                    }
+                                  }
+                                }}
+                              >
+                                <strong>{conn.node.properties?.name || conn.node.id}</strong>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--gl-gray)', marginLeft: '4px' }}>({conn.node.label})</span>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="tab-text-empty" style={{ fontSize: '0.8rem' }}>No celestial connections mapped.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="inspector-placeholder" style={{ padding: '30px 10px' }}>
+                    <span>🔎 Select any planetary coordinate orbiting in the Subspace chart to inspect details.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <main className="main-content">
+            {/* Hero Header */}
+            <section className="hero-section">
+              <span className="hero-label">Autonomous Academic Agent</span>
+              <h1 className="hero-title">Find Your <em>Research Supervisor</em></h1>
+              <p className="hero-description">
+                Upload your academic resume, portfolio, or statement of purpose. Subspace will autonomously parse your profile, 
+                conduct a global web search using Google grounding, fetch publication indexes from OpenAlex, evaluate compatibility, 
+                and write tailored cold email drafts.
+              </p>
+            </section>
+
+            {/* Unified Dashboard Grid */}
+            <div className="dashboard-grid">
+              
+              {/* Sidebar Column: Intake, Profile, & Live Logs */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                
+                {/* Controls card */}
+                <div className="card">
+                  <h3 className="card-title">Intake & Controls</h3>
+                  
+                  <div className="form-group">
+                    <span className="form-label">Step 1: Upload Portfolio / Resume</span>
+                    <label className="file-uploader">
+                      <input 
+                        type="file" 
+                        accept=".pdf,.txt,.md" 
+                        onChange={handleFileUpload} 
+                        style={{ display: 'none' }} 
+                      />
+                      <div className="file-uploader-icon">📂</div>
+                      <div className="file-uploader-text">
+                        {uploadedFile ? uploadedFile : "Drag & drop PDF/TXT or Click to browse"}
+                      </div>
+                    </label>
+                  </div>
+
+                  {candidateProfile && (
+                    <div style={{ marginTop: '24px', animation: 'fadeIn 0.4s ease-out' }}>
+                      <span className="form-label">Parsed Academic Profile</span>
+                      <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{candidateProfile.name}</p>
+                      <p style={{ color: 'var(--gl-gray)', fontSize: '0.85rem' }}>Stage: {candidateProfile.academic_level}</p>
+                      
+                      <span className="form-label" style={{ marginTop: '16px' }}>Research Domains</span>
+                      <div className="profile-pill-container">
+                        {candidateProfile.research_interests.map((interest, idx) => (
+                          <span key={idx} className="profile-pill">{interest}</span>
+                        ))}
+                      </div>
                     </div>
                   )}
-                </>
-              ) : (
-                <>
-                  <h3 className="card-title" style={{ marginBottom: '0px' }}>
-                    Knowledge Memory Graph
-                  </h3>
-                  <MemoryGraphView 
-                    memory={memory} 
-                    playClickSound={playClickSound} 
-                    playHoverSound={playHoverSound} 
-                  />
-                </>
-              )}
-            </div>
 
-          </div>
-        </main>
+                  {uploadedFile && (
+                    <button 
+                      className="btn" 
+                      style={{ marginTop: '24px' }}
+                      onClick={() => triggerSupervisorSearch(uploadedFile)}
+                      disabled={searchRunning}
+                    >
+                      {searchRunning ? 'Searching...' : 'Re-Run Search Pipeline'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Integrated Sidebar Terminal */}
+                <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '380px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`console-pulse-dot ${searchRunning ? 'running' : ''}`} />
+                      Agent Logs Terminal
+                    </h4>
+                    <button 
+                      onClick={() => { playClickSound(); setLogs([{ text: 'Console cleared.', type: 'gray' }]); }}
+                      className="btn btn-secondary" 
+                      style={{ width: 'auto', padding: '4px 8px', fontSize: '0.7rem', textTransform: 'none' }}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div style={{ flex: 1, backgroundColor: '#090d16', borderRadius: '8px', padding: '14px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.74rem', lineHeight: '1.45', color: '#c5c9db' }}>
+                    {logs.map((log, idx) => (
+                      <div key={idx} className={`console-line console-${log.type}`} style={{ marginBottom: '5px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                        {log.text}
+                      </div>
+                    ))}
+                    <div ref={consoleEndRef} />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Main Column: directory or memory graph */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {activeMainTab === 'directory' ? (
+                  <>
+                    <h3 className="card-title" style={{ marginBottom: '0px' }}>
+                      {supervisors.length > 0 ? `Matched Supervisors (${supervisors.length})` : "Matched Directory"}
+                    </h3>
+                    
+                    {supervisors.length === 0 ? (
+                      <div className="card" style={{ textAlign: 'center', padding: '80px', color: 'var(--gl-gray)', display: 'flex', flexDirection: 'column', justify: 'center', alignItems: 'center', minHeight: '350px' }}>
+                        <span style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</span>
+                        Awaiting candidate portfolio upload to begin search...
+                      </div>
+                    ) : (
+                      <div className="results-grid">
+                        {supervisors.map((prof) => (
+                          <SupervisorCard 
+                            key={prof.id} 
+                            prof={prof} 
+                            onOpenEmail={openEmailModal} 
+                            playHoverSound={playHoverSound} 
+                            playClickSound={playClickSound} 
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h3 className="card-title" style={{ marginBottom: '0px' }}>
+                      Knowledge Memory Graph
+                    </h3>
+                    <MemoryGraphView 
+                      memory={memory} 
+                      playClickSound={playClickSound} 
+                      playHoverSound={playHoverSound} 
+                    />
+                  </>
+                )}
+              </div>
+
+            </div>
+          </main>
+        )}
 
         {/* Email outreach proposal modal */}
         {selectedProf && (

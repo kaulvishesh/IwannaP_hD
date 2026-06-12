@@ -1180,3 +1180,82 @@ body.dark-mode .relation-badge {
   pointer-events: none;
 }
 
+/* Subspace Full-screen Viewport & HUD Panels */
+.space-viewport {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+  background-color: var(--gl-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.space-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.hud-panel {
+  position: absolute;
+  z-index: 10;
+  background-color: var(--gl-card-bg);
+  border: 1px solid var(--gl-border);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.dark-mode .hud-panel {
+  background-color: rgba(12, 14, 20, 0.78);
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.hud-panel-left {
+  top: 24px;
+  left: 24px;
+  width: 360px;
+  height: calc(100vh - 118px);
+  padding: 24px;
+  gap: 16px;
+}
+
+.hud-panel-right {
+  top: 24px;
+  right: 24px;
+  width: 420px;
+  height: calc(100vh - 118px);
+  padding: 24px;
+  overflow-y: auto;
+  gap: 16px;
+}
+
+.hud-scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.hud-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.space-svg-grid-dot {
+  fill: var(--gl-gray);
+  opacity: 0.15;
+}
+
