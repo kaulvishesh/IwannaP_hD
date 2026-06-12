@@ -80,14 +80,19 @@ body.dark-mode {
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: var(--gl-light) !important;
   border-bottom: 1px solid var(--gl-border);
-  padding: 24px 40px;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.06);
+  padding: 18px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: border-color 0.4s ease;
+  transition: border-color 0.4s ease, background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+body.dark-mode .app-header {
+  background-color: #141414 !important;
+  box-shadow: 0 4px 25px -4px rgba(0, 0, 0, 0.45);
 }
 
 .logo-container {
@@ -914,5 +919,210 @@ body.dark-mode .prof-stats {
   text-align: center;
   letter-spacing: 0.1em;
   opacity: 0.8;
+}
+
+/* Nav buttons inside app header */
+.nav-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gl-gray);
+  padding: 8px 0;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  color: var(--gl-black);
+}
+
+.nav-btn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--gl-black);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-btn:hover::after,
+.nav-btn.active::after {
+  width: 100%;
+}
+
+/* Memory Graph Dashboard Layout */
+.memory-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.memory-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.graph-search-input {
+  max-width: 400px;
+}
+
+.memory-timestamp {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--gl-gray);
+}
+
+.memory-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1200px) {
+  .memory-layout-grid {
+    grid-template-columns: 1.35fr 1fr;
+  }
+}
+
+.graph-card {
+  overflow: hidden;
+  border: 1px solid var(--gl-border);
+  background-color: var(--gl-card-bg);
+}
+
+.graph-svg {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .graph-svg {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.graph-instructions {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: var(--gl-gray);
+  text-align: center;
+}
+
+.detail-inspector-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  background-color: var(--gl-card-bg);
+}
+
+.inspector-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-top: 8px;
+  letter-spacing: -0.02em;
+}
+
+.inspector-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--gl-gray);
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 40px;
+  border: 1px dashed var(--gl-border);
+  border-radius: 8px;
+}
+
+.inspector-properties {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prop-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gl-border);
+}
+
+.prop-key {
+  font-size: 0.8rem;
+  color: var(--gl-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.prop-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.relations-header {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  margin-top: 24px;
+}
+
+.relations-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relation-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.relation-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  background-color: rgba(33, 33, 33, 0.04);
+  color: var(--gl-gray);
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 110px;
+  text-align: center;
+}
+
+body.dark-mode .relation-badge {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.relation-dest {
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.relation-dest:hover {
+  opacity: 0.7;
+  text-decoration: underline;
 }
 

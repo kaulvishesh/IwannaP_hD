@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // Lightweight sound engine replicating GlyphsLabs micro-interactions
 let audioCtx = null;
@@ -229,11 +229,425 @@ function SupervisorCard({ prof, onOpenEmail, playHoverSound, playClickSound }) {
   );
 }
 
+// Force layout solver for node clustering
+function computeForceLayout(nodesObj, edges, width = 750, height = 480) {
+  if (!nodesObj || Object.keys(nodesObj).length === 0) return [];
+  const nodeKeys = Object.keys(nodesObj);
+  const layoutNodes = nodeKeys.map((key, i) => {
+    const angle = (i / nodeKeys.length) * Math.PI * 2;
+    const radius = Math.min(width, height) * 0.35;
+    return {
+      id: key,
+      label: nodesObj[key].label,
+      properties: nodesObj[key].properties,
+      x: width / 2 + Math.cos(angle) * radius + (Math.random() - 0.5) * 10,
+      y: height / 2 + Math.sin(angle) * radius + (Math.random() - 0.5) * 10,
+    };
+  });
+
+  const nodeMap = {};
+  layoutNodes.forEach(node => {
+    nodeMap[node.id] = node;
+  });
+
+  const iterations = 100;
+  const k = Math.sqrt((width * height) / (layoutNodes.length || 1)) * 0.8;
+
+  for (let iter = 0; iter < iterations; iter++) {
+    // Repulsion
+    for (let i = 0; i < layoutNodes.length; i++) {
+      const u = layoutNodes[i];
+      for (let j = i + 1; j < layoutNodes.length; j++) {
+        const v = layoutNodes[j];
+        const dx = u.x - v.x;
+        const dy = u.y - v.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < 220) {
+          const force = (k * k) / dist;
+          const fx = (dx / dist) * force * 0.12;
+          const fy = (dy / dist) * force * 0.12;
+          u.x += fx;
+          u.y += fy;
+          v.x -= fx;
+          v.y -= fy;
+        }
+      }
+    }
+
+    // Attraction
+    edges.forEach(edge => {
+      const u = nodeMap[edge.source];
+      const v = nodeMap[edge.target];
+      if (u && v) {
+        const dx = u.x - v.x;
+        const dy = u.y - v.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const force = (dist * dist) / k;
+        const fx = (dx / dist) * force * 0.08;
+        const fy = (dy / dist) * force * 0.08;
+        u.x -= fx;
+        u.y -= fy;
+        v.x += fx;
+        v.y += fy;
+      }
+    });
+
+    // Constraints & Gravity
+    layoutNodes.forEach(node => {
+      const dx = width / 2 - node.x;
+      const dy = height / 2 - node.y;
+      node.x += dx * 0.015;
+      node.y += dy * 0.015;
+      node.x = Math.max(30, Math.min(width - 30, node.x));
+      node.y = Math.max(30, Math.min(height - 30, node.y));
+    });
+  }
+
+  return layoutNodes;
+}
+
+function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [draggedNode, setDraggedNode] = useState(null);
+  const [nodes, setNodes] = useState([]);
+  const svgRef = useRef(null);
+
+  const width = 850;
+  const height = 500;
+
+  useEffect(() => {
+    if (memory && memory.nodes && Object.keys(memory.nodes).length > 0) {
+      const computed = computeForceLayout(memory.nodes, memory.edges, width, height);
+      setNodes(computed);
+    } else {
+      setNodes([]);
+    }
+  }, [memory]);
+
+  const coordsMap = useMemo(() => {
+    const map = {};
+    nodes.forEach(n => {
+      map[n.id] = { x: n.x, y: n.y };
+    });
+    return map;
+  }, [nodes]);
+
+  const filteredNodes = useMemo(() => {
+    if (!searchQuery.trim()) return nodes;
+    const q = searchQuery.toLowerCase();
+    return nodes.filter(n => {
+      const name = (n.properties?.name || n.id).toLowerCase();
+      const label = n.label.toLowerCase();
+      return name.includes(q) || label.includes(q);
+    });
+  }, [nodes, searchQuery]);
+
+  const filteredNodeIds = useMemo(() => new Set(filteredNodes.map(n => n.id)), [filteredNodes]);
+
+  const visibleEdges = useMemo(() => {
+    return memory.edges.filter(edge => {
+      return coordsMap[edge.source] && coordsMap[edge.target];
+    });
+  }, [memory.edges, coordsMap]);
+
+  const handleMouseDown = (e, node) => {
+    playClickSound();
+    setSelectedNode(node);
+    setDraggedNode(node);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!draggedNode || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    const boundedX = Math.max(30, Math.min(width - 30, x));
+    const boundedY = Math.max(30, Math.min(height - 30, y));
+
+    setNodes(prev => prev.map(n => {
+      if (n.id === draggedNode.id) {
+        const updated = { ...n, x: boundedX, y: boundedY };
+        // Sync selectedNode info
+        setSelectedNode(updated);
+        return updated;
+      }
+      return n;
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setDraggedNode(null);
+  };
+
+  useEffect(() => {
+    if (draggedNode) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [draggedNode]);
+
+  const getNodeColor = (label) => {
+    switch (label) {
+      case 'Candidate': return 'var(--gl-black)';
+      case 'Interest': return '#8B5CF6';
+      case 'University': return '#10B981';
+      case 'Professor': return '#F59E0B';
+      default: return '#6D6D6D';
+    }
+  };
+
+  const connections = useMemo(() => {
+    if (!selectedNode) return [];
+    return memory.edges
+      .filter(e => e.source === selectedNode.id || e.target === selectedNode.id)
+      .map(e => {
+        const otherId = e.source === selectedNode.id ? e.target : e.source;
+        const otherNode = memory.nodes[otherId];
+        return {
+          relation: e.relation,
+          node: otherNode,
+          isSource: e.source === selectedNode.id
+        };
+      });
+  }, [selectedNode, memory]);
+
+  return (
+    <div className="memory-dashboard-container animate-fade-in">
+      <div className="memory-controls-bar">
+        <input 
+          type="text" 
+          placeholder="Filter nodes by name or entity type..." 
+          className="input-text graph-search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {memory.updated_at && (
+          <span className="memory-timestamp">
+            Last Sync: {new Date(memory.updated_at).toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+
+      <div className="memory-layout-grid">
+        <div className="card graph-card" style={{ padding: '12px', position: 'relative' }}>
+          <svg 
+            ref={svgRef} 
+            viewBox={`0 0 ${width} ${height}`} 
+            className="graph-svg"
+            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '500px' }}
+          >
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--gl-gray)" opacity="0.4" />
+              </marker>
+            </defs>
+
+            {visibleEdges.map((edge, idx) => {
+              const from = coordsMap[edge.source];
+              const to = coordsMap[edge.target];
+              if (!from || !to) return null;
+              const isSelected = selectedNode && (selectedNode.id === edge.source || selectedNode.id === edge.target);
+              const isSearching = searchQuery.trim().length > 0;
+              const isHighlighted = isSearching 
+                ? filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
+                : isSelected;
+
+              return (
+                <g key={idx}>
+                  <line 
+                    x1={from.x} 
+                    y1={from.y} 
+                    x2={to.x} 
+                    y2={to.y} 
+                    stroke={isHighlighted ? 'var(--gl-black)' : 'var(--gl-gray)'}
+                    strokeWidth={isHighlighted ? 2.5 : 1}
+                    strokeOpacity={isHighlighted ? 0.95 : 0.25}
+                    markerEnd="url(#arrow)"
+                  />
+                  {isSelected && (
+                    <text 
+                      x={(from.x + to.x) / 2} 
+                      y={(from.y + to.y) / 2 - 5}
+                      fontSize="9"
+                      fill="var(--gl-gray)"
+                      textAnchor="middle"
+                      className="edge-label"
+                      style={{ pointerEvents: 'none', userSelect: 'none', fontWeight: 'bold' }}
+                    >
+                      {edge.relation}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+
+            {nodes.map((node) => {
+              const isSelected = selectedNode && selectedNode.id === node.id;
+              const isSearching = searchQuery.trim().length > 0;
+              const isFiltered = isSearching && !filteredNodeIds.has(node.id);
+              const nodeColor = getNodeColor(node.label);
+
+              return (
+                <g 
+                  key={node.id} 
+                  transform={`translate(${node.x}, ${node.y})`}
+                  style={{ cursor: 'pointer', transition: draggedNode?.id === node.id ? 'none' : 'transform 0.1s ease' }}
+                  onMouseDown={(e) => handleMouseDown(e, node)}
+                  onPointerOver={playHoverSound}
+                >
+                  <circle 
+                    r={isSelected ? 18 : 13} 
+                    fill={nodeColor} 
+                    stroke="var(--gl-light)" 
+                    strokeWidth="3"
+                    style={{ 
+                      opacity: isFiltered ? 0.25 : 1,
+                      filter: isSelected ? 'drop-shadow(0px 0px 8px rgba(0,0,0,0.2))' : 'none',
+                      transition: 'r 0.2s ease, opacity 0.2s ease'
+                    }}
+                  />
+                  <text
+                    y="26"
+                    textAnchor="middle"
+                    fontSize="9.5"
+                    fontWeight={isSelected ? 'bold' : '500'}
+                    fill="var(--gl-black)"
+                    style={{ 
+                      opacity: isFiltered ? 0.3 : 0.95,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                      fontFamily: 'var(--font-sans)'
+                    }}
+                  >
+                    {node.properties?.name || node.id}
+                  </text>
+                  {isSelected && (
+                    <text
+                      y="-20"
+                      textAnchor="middle"
+                      fontSize="8"
+                      fontWeight="bold"
+                      fill={nodeColor}
+                      style={{ pointerEvents: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                    >
+                      {node.label}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+          <div className="graph-instructions">
+            <span>💡 Click & drag nodes to organize. Select a node to inspect relations.</span>
+          </div>
+        </div>
+
+        <div className="card detail-inspector-card">
+          {selectedNode ? (
+            <div className="animate-fade-in">
+              <span className="hero-label" style={{ color: getNodeColor(selectedNode.label), fontWeight: 'bold' }}>
+                {selectedNode.label} Entity
+              </span>
+              <h3 className="inspector-title">{selectedNode.properties?.name || selectedNode.id}</h3>
+              
+              <div className="prof-divider" style={{ margin: '16px 0' }} />
+
+              <div className="inspector-properties">
+                {selectedNode.label === 'Candidate' && (
+                  <div className="prop-row">
+                    <span className="prop-key">Academic Stage</span>
+                    <span className="prop-value">{selectedNode.properties?.academic_level || '—'}</span>
+                  </div>
+                )}
+
+                {selectedNode.label === 'Professor' && (
+                  <>
+                    <div className="prop-row">
+                      <span className="prop-key">Department</span>
+                      <span className="prop-value">{selectedNode.properties?.department || '—'}</span>
+                    </div>
+                    <div className="prop-row">
+                      <span className="prop-key">Citations</span>
+                      <span className="prop-value">{selectedNode.properties?.citations || '—'}</span>
+                    </div>
+                    <div className="prop-row">
+                      <span className="prop-key">H-Index</span>
+                      <span className="prop-value">{selectedNode.properties?.h_index || '—'}</span>
+                    </div>
+                  </>
+                )}
+
+                {selectedNode.label === 'University' && (
+                  <div className="prop-row">
+                    <span className="prop-key">University Name</span>
+                    <span className="prop-value">{selectedNode.properties?.name || '—'}</span>
+                  </div>
+                )}
+
+                {selectedNode.label === 'Interest' && (
+                  <div className="prop-row">
+                    <span className="prop-key">Research Field</span>
+                    <span className="prop-value">{selectedNode.properties?.name || '—'}</span>
+                  </div>
+                )}
+              </div>
+
+              <h4 className="relations-header">Active Memory Relations</h4>
+              {connections.length > 0 ? (
+                <ul className="relations-list">
+                  {connections.map((conn, idx) => {
+                    if (!conn.node) return null;
+                    const nodeColor = getNodeColor(conn.node.label);
+                    return (
+                      <li key={idx} className="relation-item">
+                        <span className="relation-badge" style={{ borderLeft: `3px solid ${nodeColor}` }}>
+                          {conn.relation}
+                        </span>
+                        <div 
+                          className="relation-dest" 
+                          onClick={() => { 
+                            playClickSound(); 
+                            const targetNode = nodes.find(n => n.id === conn.node.id);
+                            if (targetNode) setSelectedNode(targetNode);
+                          }}
+                        >
+                          <strong>{conn.node.properties?.name || conn.node.id}</strong>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--gl-gray)', marginLeft: '6px' }}>({conn.node.label})</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="tab-text-empty" style={{ fontSize: '0.8rem' }}>No relationships mapped for this node.</p>
+              )}
+            </div>
+          ) : (
+            <div className="inspector-placeholder">
+              <span>🔎 Click any node in the Knowledge Graph to inspect properties and memory relations.</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
   const [searchRunning, setSearchRunning] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState('directory'); // 'directory' or 'memory'
+  const [memory, setMemory] = useState({ nodes: {}, edges: [], updated_at: null });
   
   // Data state
   const [uploadedFile, setUploadedFile] = useState('');
@@ -261,6 +675,20 @@ export default function App() {
     }
   }, [darkMode]);
 
+  const fetchMemory = () => {
+    fetch("http://localhost:8000/api/memory")
+      .then(res => {
+        if (!res.ok) throw new Error("Memory API failed");
+        return res.json();
+      })
+      .then(data => {
+        setMemory(data);
+      })
+      .catch(err => {
+        console.warn("No memory graph fetched:", err);
+      });
+  };
+
   useEffect(() => {
     // Fetch cached matches if present
     fetch("http://localhost:8000/api/supervisors")
@@ -275,6 +703,8 @@ export default function App() {
       .catch(err => {
         console.warn("No supervisor matches fetched:", err);
       });
+
+    fetchMemory();
   }, []);
 
   // Auto-scroll logs terminal
@@ -481,6 +911,7 @@ export default function App() {
         setSupervisors(data.data.matches);
         addLog(`Pipeline complete! Found and parsed ${data.data.matches.length} matching supervisors.`, 'greet');
         playSuccessSound();
+        fetchMemory();
         ws.close();
       } else if (data.type === 'error') {
         setSearchRunning(false);
@@ -539,6 +970,22 @@ export default function App() {
           </div>
           
           <ul className="nav-links">
+            <li>
+              <button 
+                className={`nav-btn ${activeMainTab === 'directory' ? 'active' : ''}`}
+                onClick={() => { playClickSound(); setActiveMainTab('directory'); }}
+              >
+                📁 Directory
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`nav-btn ${activeMainTab === 'memory' ? 'active' : ''}`}
+                onClick={() => { playClickSound(); setActiveMainTab('memory'); }}
+              >
+                🧠 Agent Memory
+              </button>
+            </li>
             <li>
               <button className="theme-toggle" onClick={() => { playClickSound(); setDarkMode(!darkMode); }}>
                 {darkMode ? '☀️ LIGHT' : '🌙 DARK'}
@@ -639,29 +1086,44 @@ export default function App() {
 
             </div>
 
-            {/* Main Column: Supervisor Directory */}
+            {/* Main Column: directory or memory graph */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <h3 className="card-title" style={{ marginBottom: '0px' }}>
-                {supervisors.length > 0 ? `Matched Supervisors (${supervisors.length})` : "Matched Directory"}
-              </h3>
-              
-              {supervisors.length === 0 ? (
-                <div className="card" style={{ textAlign: 'center', padding: '80px', color: 'var(--gl-gray)', display: 'flex', flexDirection: 'column', justify: 'center', alignItems: 'center', minHeight: '350px' }}>
-                  <span style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</span>
-                  Awaiting candidate portfolio upload to begin search...
-                </div>
+              {activeMainTab === 'directory' ? (
+                <>
+                  <h3 className="card-title" style={{ marginBottom: '0px' }}>
+                    {supervisors.length > 0 ? `Matched Supervisors (${supervisors.length})` : "Matched Directory"}
+                  </h3>
+                  
+                  {supervisors.length === 0 ? (
+                    <div className="card" style={{ textAlign: 'center', padding: '80px', color: 'var(--gl-gray)', display: 'flex', flexDirection: 'column', justify: 'center', alignItems: 'center', minHeight: '350px' }}>
+                      <span style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</span>
+                      Awaiting candidate portfolio upload to begin search...
+                    </div>
+                  ) : (
+                    <div className="results-grid">
+                      {supervisors.map((prof) => (
+                        <SupervisorCard 
+                          key={prof.id} 
+                          prof={prof} 
+                          onOpenEmail={openEmailModal} 
+                          playHoverSound={playHoverSound} 
+                          playClickSound={playClickSound} 
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="results-grid">
-                  {supervisors.map((prof) => (
-                    <SupervisorCard 
-                      key={prof.id} 
-                      prof={prof} 
-                      onOpenEmail={openEmailModal} 
-                      playHoverSound={playHoverSound} 
-                      playClickSound={playClickSound} 
-                    />
-                  ))}
-                </div>
+                <>
+                  <h3 className="card-title" style={{ marginBottom: '0px' }}>
+                    Knowledge Memory Graph
+                  </h3>
+                  <MemoryGraphView 
+                    memory={memory} 
+                    playClickSound={playClickSound} 
+                    playHoverSound={playHoverSound} 
+                  />
+                </>
               )}
             </div>
 

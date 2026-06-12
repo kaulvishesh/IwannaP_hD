@@ -46,6 +46,17 @@ async def get_supervisors():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading matches: {str(e)}")
 
+@app.get("/api/memory")
+async def get_memory():
+    memory_file = os.path.join(WORKSPACE_DIR, "agent_memory.json")
+    if not os.path.exists(memory_file):
+        return {"nodes": {}, "edges": [], "updated_at": None}
+    try:
+        with open(memory_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading memory: {str(e)}")
+
 @app.post("/api/upload-resume")
 async def upload_resume(file: UploadFile = File(...)):
     filename = file.filename

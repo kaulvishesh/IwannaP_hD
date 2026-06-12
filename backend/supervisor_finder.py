@@ -470,6 +470,15 @@ def run_supervisor_pipeline(resume_path: str):
     print(f"[+] Complete! Found and processed {len(results)} supervisors.")
     print(f"[+] Results saved to: {output_filename}")
     print(f"==========================================")
+
+    # Integrate with Agent Memory Graph
+    try:
+        from agent_memory import AgentMemory
+        memory = AgentMemory()
+        memory.integrate_search_run(candidate_profile, results)
+        print("[+] Successfully integrated search results into Agent Memory Graph.")
+    except Exception as e:
+        print(f"[-] Failed to integrate search results into Agent Memory: {str(e)}")
     
     # Print a quick preview of findings
     for prof in results:
