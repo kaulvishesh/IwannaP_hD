@@ -538,7 +538,7 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
 }
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFade, setSplashFade] = useState(false);
   const [searchRunning, setSearchRunning] = useState(false);

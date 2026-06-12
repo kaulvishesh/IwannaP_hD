@@ -67,8 +67,12 @@ body.dark-mode {
 }
 
 ::-webkit-scrollbar-thumb {
+  background: var(--gl-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
   background: var(--gl-black);
-  border-radius: 2px;
 }
 
 /* App root layout */
