@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# Environment variables
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large local files / caches
+cloned_repos/
+*.pdf
+*.json
+!package.json
+!package-lock.json
+gpt-researcher/
+resume-optimization-crew/
+
+# Unrelated project scripts & files (cleanup)
+job_hunter_agent.py
+resume_optimizer.py
+refinement_loop.py
+scratch_test.py
+test_search_grounding.py
+pppp.py
+improvement_report.md
+improvement_report_*.md
+optimized_resume.md
+tailored_resume_*.md
+sample_resume.txt
+sample_job_desc.txt
