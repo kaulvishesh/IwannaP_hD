@@ -1,0 +1,21 @@
+John Doe
+Software Engineer
+Email: john.doe@email.com | Phone: 123-456-7890 | GitHub: github.com/johndoe
+
+Summary:
+Motivated Software Developer with 2 years of experience. I enjoy writing code, working with databases, and building websites. Looking for a new opportunity.
+
+Experience:
+Junior Developer | Tech Solutions Inc. (2024 - Present)
+- Worked on a Python backend application.
+- Fixed bugs in the code.
+- Wrote SQL queries to get data from the database.
+- Met with team members to discuss project requirements.
+
+Web Developer | Freelance (2023 - 2024)
+- Built websites for local small businesses.
+- Used HTML, CSS, and some Javascript.
+- Set up domain names and hosting.
+
+Skills:
+Python, SQL, HTML, CSS, Javascript, Git, Microsoft Word, Excel
