@@ -50,6 +50,21 @@ async def get_supervisors():
 async def get_memory():
     memory_file = os.path.join(WORKSPACE_DIR, "agent_memory.json")
     if not os.path.exists(memory_file):
+        # Auto-initialize memory graph from cached matches if available
+        if os.path.exists(MATCHES_FILE):
+            try:
+                with open(MATCHES_FILE, "r", encoding="utf-8") as f:
+                    matches_data = json.load(f)
+                candidate = matches_data.get("candidate", {})
+                matches = matches_data.get("matches", [])
+                
+                from agent_memory import AgentMemory
+                memory = AgentMemory()
+                memory.integrate_search_run(candidate, matches)
+            except Exception as e:
+                print(f"[Warning] Failed to auto-initialize memory: {e}")
+
+    if not os.path.exists(memory_file):
         return {"nodes": {}, "edges": [], "updated_at": None}
     try:
         with open(memory_file, "r", encoding="utf-8") as f:
