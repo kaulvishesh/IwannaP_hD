@@ -105,6 +105,22 @@ def query_gemini(prompt: str, system_prompt: str = "", model: str = DEFAULT_GEMI
             print(f"Error details: {e}")
             sys.exit(1)
 
+def query_gemini_json_with_search(prompt: str, system_prompt: str = "") -> dict:
+    """Helper to perform search grounding and force JSON output via a two-step query."""
+    # Step 1: Research with search grounding
+    research_prompt = f"{prompt}\n\nGather all relevant details and write a comprehensive research report."
+    research_report = query_gemini(research_prompt, system_prompt=system_prompt, use_search=True, json_mode=False)
+    
+    # Step 2: Format to JSON (without search, so we can use native JSON MimeType config)
+    format_system_prompt = (
+        "You are an expert data parser. Parse the provided research report and format the output into a clean JSON object. "
+        "Strictly follow the requested JSON schema. Do not output any conversational text, markdown code blocks, or explanations."
+    )
+    format_prompt = f"Research Report:\n{research_report}\n\nOriginal Request details and schema requirements:\n{prompt}"
+    
+    json_response = query_gemini(format_prompt, system_prompt=format_system_prompt, use_search=False, json_mode=True)
+    return extract_json_block(json_response)
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extracts text from a PDF file."""
     if not pypdf:
@@ -204,9 +220,12 @@ def search_for_supervisors(profile: dict) -> list:
         "```"
     )
     
-    response = query_gemini(prompt, use_search=True)
-    parsed = extract_json_block(response)
-    return parsed.get("supervisors", [])
+    try:
+        parsed = query_gemini_json_with_search(prompt)
+        return parsed.get("supervisors", [])
+    except Exception as e:
+        print(f"[-] Failed to search for supervisors: {e}")
+        return []
 
 # --- Stage 3: Enrich with OpenAlex Publications ---
 def enrich_professor_via_openalex(prof_name: str, university: str) -> dict:
@@ -322,8 +341,7 @@ def generate_professor_deep_dive(prof_name: str, university: str) -> dict:
     prompt = f"Conduct a deep dive on Professor {prof_name} at {university}. Search the web for their social media, student reviews, career placements, and public opinions/beliefs."
     
     try:
-        response = query_gemini(prompt, system_prompt, use_search=True)
-        return extract_json_block(response)
+        return query_gemini_json_with_search(prompt, system_prompt)
     except Exception as e:
         print(f"    [!] Failed to generate deep dive for {prof_name}: {e}")
         return {
@@ -371,8 +389,7 @@ def find_working_homepage(prof_name: str, university: str) -> str:
         f"```"
     )
     try:
-        response = query_gemini(prompt, use_search=True)
-        data = extract_json_block(response)
+        data = query_gemini_json_with_search(prompt)
         url = data.get("url")
         if url and url.startswith("http"):
             return url
