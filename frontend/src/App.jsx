@@ -311,10 +311,12 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [draggedNode, setDraggedNode] = useState(null);
   const [nodes, setNodes] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredNode, setHoveredNode] = useState(null);
   const svgRef = useRef(null);
 
-  const width = 850;
-  const height = 500;
+  const width = isExpanded ? 1200 : 850;
+  const height = isExpanded ? 650 : 500;
 
   useEffect(() => {
     if (memory && memory.nodes && Object.keys(memory.nodes).length > 0) {
@@ -323,7 +325,7 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
     } else {
       setNodes([]);
     }
-  }, [memory]);
+  }, [memory, width, height]);
 
   const coordsMap = useMemo(() => {
     const map = {};
@@ -332,6 +334,16 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
     });
     return map;
   }, [nodes]);
+
+  const neighborNodeIds = useMemo(() => {
+    if (!hoveredNode) return new Set();
+    const neighbors = new Set([hoveredNode.id]);
+    memory.edges.forEach(e => {
+      if (e.source === hoveredNode.id) neighbors.add(e.target);
+      if (e.target === hoveredNode.id) neighbors.add(e.source);
+    });
+    return neighbors;
+  }, [hoveredNode, memory.edges]);
 
   const filteredNodes = useMemo(() => {
     if (!searchQuery.trim()) return nodes;
@@ -371,7 +383,6 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
     setNodes(prev => prev.map(n => {
       if (n.id === draggedNode.id) {
         const updated = { ...n, x: boundedX, y: boundedY };
-        // Sync selectedNode info
         setSelectedNode(updated);
         return updated;
       }
@@ -436,16 +447,27 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
         )}
       </div>
 
-      <div className="memory-layout-grid">
+      <div className={`memory-layout-grid ${isExpanded ? 'grid-expanded' : ''}`}>
         <div className="card graph-card" style={{ padding: '12px', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}>
+            <button 
+              className="btn btn-secondary" 
+              style={{ width: 'auto', padding: '6px 12px', fontSize: '0.75rem', textTransform: 'none', backgroundColor: 'var(--gl-card-bg)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => { playClickSound(); setIsExpanded(!isExpanded); }}
+              onPointerOver={playHoverSound}
+            >
+              {isExpanded ? '🗗 Collapse View' : '🗖 Expand View'}
+            </button>
+          </div>
+
           <svg 
             ref={svgRef} 
             viewBox={`0 0 ${width} ${height}`} 
             className="graph-svg"
-            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '500px' }}
+            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isExpanded ? '650px' : '500px', transition: 'max-height 0.3s ease' }}
           >
             <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <marker id="arrow" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--gl-gray)" opacity="0.4" />
               </marker>
             </defs>
@@ -454,11 +476,26 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
               const from = coordsMap[edge.source];
               const to = coordsMap[edge.target];
               if (!from || !to) return null;
+              
               const isSelected = selectedNode && (selectedNode.id === edge.source || selectedNode.id === edge.target);
+              
+              // Hover highlight logic
+              const isGraphHovered = hoveredNode !== null;
+              const isEdgeConnectedToHover = hoveredNode && (hoveredNode.id === edge.source || hoveredNode.id === edge.target);
+              
               const isSearching = searchQuery.trim().length > 0;
               const isHighlighted = isSearching 
                 ? filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
-                : isSelected;
+                : (isGraphHovered ? isEdgeConnectedToHover : isSelected);
+
+              let edgeOpacity = 0.25;
+              if (isSearching) {
+                edgeOpacity = isHighlighted ? 0.95 : 0.1;
+              } else if (isGraphHovered) {
+                edgeOpacity = isEdgeConnectedToHover ? 0.95 : 0.05;
+              } else if (isSelected) {
+                edgeOpacity = 0.95;
+              }
 
               return (
                 <g key={idx}>
@@ -468,9 +505,10 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
                     x2={to.x} 
                     y2={to.y} 
                     stroke={isHighlighted ? 'var(--gl-black)' : 'var(--gl-gray)'}
-                    strokeWidth={isHighlighted ? 2.5 : 1}
-                    strokeOpacity={isHighlighted ? 0.95 : 0.25}
+                    strokeWidth={isHighlighted ? 2.5 : 1.2}
+                    strokeOpacity={edgeOpacity}
                     markerEnd="url(#arrow)"
+                    style={{ transition: 'stroke-opacity 0.2s ease, stroke-width 0.2s ease, stroke 0.2s ease' }}
                   />
                   {isSelected && (
                     <text 
@@ -493,6 +531,18 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
               const isSelected = selectedNode && selectedNode.id === node.id;
               const isSearching = searchQuery.trim().length > 0;
               const isFiltered = isSearching && !filteredNodeIds.has(node.id);
+              
+              // Hover highlight logic
+              const isGraphHovered = hoveredNode !== null;
+              const isNeighbor = neighborNodeIds.has(node.id);
+              
+              let nodeOpacity = 1;
+              if (isFiltered) {
+                nodeOpacity = 0.15;
+              } else if (isGraphHovered && !isNeighbor) {
+                nodeOpacity = 0.2;
+              }
+
               const nodeColor = getNodeColor(node.label);
 
               return (
@@ -501,39 +551,41 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
                   transform={`translate(${node.x}, ${node.y})`}
                   style={{ cursor: 'pointer', transition: draggedNode?.id === node.id ? 'none' : 'transform 0.1s ease' }}
                   onMouseDown={(e) => handleMouseDown(e, node)}
-                  onPointerOver={playHoverSound}
+                  onPointerOver={() => { playHoverSound(); setHoveredNode(node); }}
+                  onPointerOut={() => setHoveredNode(null)}
                 >
                   <circle 
-                    r={isSelected ? 18 : 13} 
+                    r={isSelected ? 20 : 15} 
                     fill={nodeColor} 
                     stroke="var(--gl-light)" 
-                    strokeWidth="3"
+                    strokeWidth="3.5"
                     style={{ 
-                      opacity: isFiltered ? 0.25 : 1,
-                      filter: isSelected ? 'drop-shadow(0px 0px 8px rgba(0,0,0,0.2))' : 'none',
+                      opacity: nodeOpacity,
+                      filter: isSelected ? 'drop-shadow(0px 4px 12px rgba(0,0,0,0.25))' : 'drop-shadow(0px 2px 6px rgba(0,0,0,0.12))',
                       transition: 'r 0.2s ease, opacity 0.2s ease'
                     }}
                   />
                   <text
-                    y="26"
+                    y="28"
                     textAnchor="middle"
-                    fontSize="9.5"
-                    fontWeight={isSelected ? 'bold' : '500'}
+                    fontSize="10.5"
+                    fontWeight={isSelected ? 'bold' : '600'}
                     fill="var(--gl-black)"
                     style={{ 
-                      opacity: isFiltered ? 0.3 : 0.95,
+                      opacity: nodeOpacity,
                       pointerEvents: 'none',
                       userSelect: 'none',
-                      fontFamily: 'var(--font-sans)'
+                      fontFamily: 'var(--font-sans)',
+                      transition: 'opacity 0.2s ease'
                     }}
                   >
                     {node.properties?.name || node.id}
                   </text>
                   {isSelected && (
                     <text
-                      y="-20"
+                      y="-24"
                       textAnchor="middle"
-                      fontSize="8"
+                      fontSize="8.5"
                       fontWeight="bold"
                       fill={nodeColor}
                       style={{ pointerEvents: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}
@@ -546,7 +598,7 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
             })}
           </svg>
           <div className="graph-instructions">
-            <span>💡 Click & drag nodes to organize. Select a node to inspect relations.</span>
+            <span>💡 Click & drag nodes to organize. Hover to highlight connections. Select to inspect relations.</span>
           </div>
         </div>
 

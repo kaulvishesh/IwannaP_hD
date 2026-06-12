@@ -997,6 +997,10 @@ body.dark-mode .prof-stats {
   }
 }
 
+.memory-layout-grid.grid-expanded {
+  grid-template-columns: 1fr !important;
+}
+
 .graph-card {
   overflow: hidden;
   border: 1px solid var(--gl-border);
