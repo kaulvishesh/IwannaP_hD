@@ -18,8 +18,11 @@ DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
 def load_env_file():
     """Loads environment variables from .env file if it exists."""
-    if os.path.exists(".env"):
-        with open(".env", "r", encoding="utf-8") as f:
+    env_path = ".env"
+    if not os.path.exists(env_path):
+        env_path = os.path.join("..", ".env")
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
