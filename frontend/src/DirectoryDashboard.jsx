@@ -512,22 +512,12 @@ export default function DirectoryDashboard({
       {/* 3. Navigation Tab Bar & Layout Toggles */}
       <section className="workspace-tabs-container">
         <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            className={`tab-btn-v2 ${activeMainTab === 'directory' ? 'active' : ''}`}
-            onClick={() => { playClickSound(); setActiveMainTab('directory'); }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', fontSize: '0.95rem', fontWeight: 600, color: 'var(--gl-black)', fontFamily: 'var(--font-heading)' }}>
             📁 Supervisor matches ({filteredAndSortedSupervisors.length})
-          </button>
-          
-          <button
-            className={`tab-btn-v2 ${activeMainTab === 'memory' ? 'active' : ''}`}
-            onClick={() => { playClickSound(); setActiveMainTab('memory'); }}
-          >
-            🧠 Subspace Memory Graph
-          </button>
+          </div>
         </div>
 
-        {activeMainTab === 'directory' && filteredAndSortedSupervisors.length > 0 && (
+        {filteredAndSortedSupervisors.length > 0 && (
           <div className="layout-toggle-container">
             <button
               className={`layout-toggle-btn ${viewLayout === 'grid' ? 'active' : ''}`}
@@ -547,11 +537,8 @@ export default function DirectoryDashboard({
 
       {/* 4. Tab Context Panel Render */}
       <div className="tab-context-panel" style={{ flex: 1 }}>
-        {activeMainTab === 'memory' ? (
-          children // Render MemoryGraphView child
-        ) : (
-          /* Directory View */
-          <>
+        {/* Directory View */}
+        <>
             {filteredAndSortedSupervisors.length === 0 ? (
               <div className="card" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--gl-gray)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
                 <span style={{ fontSize: '2.5rem', marginBottom: '16px' }}>🔍</span>
@@ -654,7 +641,6 @@ export default function DirectoryDashboard({
               </div>
             )}
           </>
-        )}
       </div>
     </div>
   );

@@ -1319,15 +1319,7 @@ export default function App() {
                   playClickSound={playClickSound}
                   playHoverSound={playHoverSound}
                   darkMode={darkMode}
-                  activeMainTab={activeMainTab}
-                  setActiveMainTab={setActiveMainTab}
-                >
-                  <MemoryGraphView 
-                    memory={memory} 
-                    playClickSound={playClickSound} 
-                    playHoverSound={playHoverSound} 
-                  />
-                </DirectoryDashboard>
+                />
               </div>
 
             </div>

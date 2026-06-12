@@ -73,6 +73,13 @@ export default function SupervisorCard({
           >
             🔎 Deep Dive
           </button>
+          <button 
+            className={`card-tab-btn ${activeTab === 'migration' ? 'active' : ''}`}
+            onClick={() => { playClickSound(); setActiveTab('migration'); }}
+            onPointerOver={playHoverSound}
+          >
+            ✈️ Emigration & Fees
+          </button>
         </div>
 
         {/* Tab Content Panes */}
@@ -168,6 +175,56 @@ export default function SupervisorCard({
                 </div>
               ) : (
                 <p className="tab-text-empty">No deep-dive sentiment files cached.</p>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'migration' && (
+            <div className="tab-pane-migration animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="prof-section-title">Funding, Cost & Deadline (Emigration from India)</div>
+              {prof.migration_details ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ backgroundColor: 'var(--gl-border)', padding: '10px', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', color: 'var(--gl-gray)', fontWeight: 'bold' }}>Application Deadline</div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--gl-black)', marginTop: '2px' }}>{prof.migration_details.application_deadlines}</div>
+                    </div>
+                    <div style={{ backgroundColor: 'var(--gl-border)', padding: '10px', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', color: 'var(--gl-gray)', fontWeight: 'bold' }}>Estimated Tuition Fees</div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--gl-black)', marginTop: '2px' }}>{prof.migration_details.tuition_fees}</div>
+                    </div>
+                  </div>
+                  <div style={{ backgroundColor: 'var(--gl-border)', padding: '10px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', color: 'var(--gl-gray)', fontWeight: 'bold' }}>Cost of Living (Est. Monthly)</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--gl-black)', marginTop: '2px' }}>{prof.migration_details.cost_of_living}</div>
+                  </div>
+
+                  {prof.migration_details.scholarships && prof.migration_details.scholarships.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 'bold', color: 'var(--gl-black)', marginBottom: '4px' }}>Eligible Scholarships (Indian Applicants)</div>
+                      <ul style={{ listStyleType: 'none', paddingLeft: 0, margin: 0 }}>
+                        {prof.migration_details.scholarships.map((sch, idx) => (
+                          <li key={idx} style={{ fontSize: '0.78rem', marginBottom: '6px', padding: '6px 10px', borderRadius: '6px', borderLeft: '2.5px solid #10B981', backgroundColor: 'rgba(16, 185, 129, 0.05)' }}>
+                            <strong>{sch.name}</strong>: <span style={{ color: 'var(--gl-gray)' }}>{sch.description}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {prof.migration_details.emigration_tips && prof.migration_details.emigration_tips.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 'bold', color: 'var(--gl-black)', marginBottom: '4px' }}>Emigration Advice</div>
+                      <ul style={{ paddingLeft: '16px', margin: 0 }}>
+                        {prof.migration_details.emigration_tips.map((tip, idx) => (
+                          <li key={idx} style={{ fontSize: '0.78rem', color: 'var(--gl-gray)', marginBottom: '3px' }}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="tab-text-empty" style={{ fontSize: '0.8rem' }}>No emigration details indexed. Run the supervisor pipeline again to fetch cost data.</p>
               )}
             </div>
           )}
