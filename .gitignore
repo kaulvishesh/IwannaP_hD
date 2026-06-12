@@ -32,3 +32,17 @@ cloned_repos/
 !package-lock.json
 gpt-researcher/
 resume-optimization-crew/
+
+# Unrelated project scripts & files (cleanup)
+job_hunter_agent.py
+resume_optimizer.py
+refinement_loop.py
+scratch_test.py
+test_search_grounding.py
+pppp.py
+improvement_report.md
+improvement_report_*.md
+optimized_resume.md
+tailored_resume_*.md
+sample_resume.txt
+sample_job_desc.txt

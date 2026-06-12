@@ -14,7 +14,7 @@ except ImportError:
     pypdf = None
 
 # Configuration
-DEFAULT_GEMINI_MODEL = "gemini-1.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
 def load_env_file():
     """Loads environment variables from .env file if it exists."""
