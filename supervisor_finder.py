@@ -131,9 +131,17 @@ def load_file_content(file_path: str) -> str:
         sys.exit(1)
 
 def extract_json_block(text: str) -> dict:
-    """Extracts and parses JSON object from a markdown code block if present."""
+    """Extracts and parses JSON object from a string, handles conversational padding and markdown formatting."""
     match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
-    json_str = match.group(1) if match else text
+    if match:
+        json_str = match.group(1).strip()
+    else:
+        start_idx = text.find('{')
+        end_idx = text.rfind('}')
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = text[start_idx:end_idx+1].strip()
+        else:
+            json_str = text.strip()
     try:
         return json.loads(json_str)
     except Exception as e:
