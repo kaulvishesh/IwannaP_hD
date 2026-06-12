@@ -1,0 +1,215 @@
+{
+  "nodes": {
+    "cand_anandita_kaushal": {
+      "id": "cand_anandita_kaushal",
+      "label": "Candidate",
+      "properties": {
+        "name": "Anandita Kaushal",
+        "academic_level": "Master's Student"
+      }
+    },
+    "interest_hydrogeological_modeling": {
+      "id": "interest_hydrogeological_modeling",
+      "label": "Interest",
+      "properties": {
+        "name": "Hydrogeological Modeling"
+      }
+    },
+    "interest_climate_change_adaptation": {
+      "id": "interest_climate_change_adaptation",
+      "label": "Interest",
+      "properties": {
+        "name": "Climate Change Adaptation"
+      }
+    },
+    "interest_hydrological_remote_sensing": {
+      "id": "interest_hydrological_remote_sensing",
+      "label": "Interest",
+      "properties": {
+        "name": "Hydrological Remote Sensing"
+      }
+    },
+    "interest_glacial_lake_outburst_flood_glof_dynamics": {
+      "id": "interest_glacial_lake_outburst_flood_glof_dynamics",
+      "label": "Interest",
+      "properties": {
+        "name": "Glacial Lake Outburst Flood (GLOF) Dynamics"
+      }
+    },
+    "interest_environmental_data_science": {
+      "id": "interest_environmental_data_science",
+      "label": "Interest",
+      "properties": {
+        "name": "Environmental Data Science"
+      }
+    },
+    "uni_graz_university_of_technology": {
+      "id": "uni_graz_university_of_technology",
+      "label": "University",
+      "properties": {
+        "name": "Graz University of Technology"
+      }
+    },
+    "prof_dr_tobias_bolch": {
+      "id": "prof_dr_tobias_bolch",
+      "label": "Professor",
+      "properties": {
+        "name": "Dr. Tobias Bolch",
+        "department": "Institute of Geodesy, Remote Sensing Group",
+        "citations": "—",
+        "h_index": "—"
+      }
+    },
+    "uni_imperial_college_london": {
+      "id": "uni_imperial_college_london",
+      "label": "University",
+      "properties": {
+        "name": "Imperial College London"
+      }
+    },
+    "prof_professor_wouter_buytaert": {
+      "id": "prof_professor_wouter_buytaert",
+      "label": "Professor",
+      "properties": {
+        "name": "Professor Wouter Buytaert",
+        "department": "Department of Civil and Environmental Engineering",
+        "citations": "—",
+        "h_index": "—"
+      }
+    },
+    "uni_university_of_texas_at_austin": {
+      "id": "uni_university_of_texas_at_austin",
+      "label": "University",
+      "properties": {
+        "name": "University of Texas at Austin"
+      }
+    },
+    "prof_professor_bridget_scanlon": {
+      "id": "prof_professor_bridget_scanlon",
+      "label": "Professor",
+      "properties": {
+        "name": "Professor Bridget Scanlon",
+        "department": "Bureau of Economic Geology, Jackson School of Geosciences",
+        "citations": "—",
+        "h_index": "—"
+      }
+    },
+    "uni_university_of_arizona": {
+      "id": "uni_university_of_arizona",
+      "label": "University",
+      "properties": {
+        "name": "University of Arizona"
+      }
+    },
+    "prof_professor_jeffrey_kargel": {
+      "id": "prof_professor_jeffrey_kargel",
+      "label": "Professor",
+      "properties": {
+        "name": "Professor Jeffrey Kargel",
+        "department": "Department of Hydrology and Atmospheric Sciences",
+        "citations": "—",
+        "h_index": "—"
+      }
+    },
+    "uni_international_institute_for_applied_systems_analysis_iiasa": {
+      "id": "uni_international_institute_for_applied_systems_analysis_iiasa",
+      "label": "University",
+      "properties": {
+        "name": "International Institute for Applied Systems Analysis (IIASA)"
+      }
+    },
+    "prof_professor_yoshihide_wada": {
+      "id": "prof_professor_yoshihide_wada",
+      "label": "Professor",
+      "properties": {
+        "name": "Professor Yoshihide Wada",
+        "department": "Water Security Research Group",
+        "citations": "—",
+        "h_index": "—"
+      }
+    }
+  },
+  "edges": [
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "interest_hydrogeological_modeling",
+      "relation": "INTERESTED_IN"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "interest_climate_change_adaptation",
+      "relation": "INTERESTED_IN"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "interest_hydrological_remote_sensing",
+      "relation": "INTERESTED_IN"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "interest_glacial_lake_outburst_flood_glof_dynamics",
+      "relation": "INTERESTED_IN"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "interest_environmental_data_science",
+      "relation": "INTERESTED_IN"
+    },
+    {
+      "source": "prof_dr_tobias_bolch",
+      "target": "uni_graz_university_of_technology",
+      "relation": "AFFILIATED_WITH"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "prof_dr_tobias_bolch",
+      "relation": "MATCHED_WITH_95%"
+    },
+    {
+      "source": "prof_professor_wouter_buytaert",
+      "target": "uni_imperial_college_london",
+      "relation": "AFFILIATED_WITH"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "prof_professor_wouter_buytaert",
+      "relation": "MATCHED_WITH_92%"
+    },
+    {
+      "source": "prof_professor_bridget_scanlon",
+      "target": "uni_university_of_texas_at_austin",
+      "relation": "AFFILIATED_WITH"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "prof_professor_bridget_scanlon",
+      "relation": "MATCHED_WITH_92%"
+    },
+    {
+      "source": "prof_professor_jeffrey_kargel",
+      "target": "uni_university_of_arizona",
+      "relation": "AFFILIATED_WITH"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "prof_professor_jeffrey_kargel",
+      "relation": "MATCHED_WITH_95%"
+    },
+    {
+      "source": "prof_professor_yoshihide_wada",
+      "target": "uni_international_institute_for_applied_systems_analysis_iiasa",
+      "relation": "AFFILIATED_WITH"
+    },
+    {
+      "source": "cand_anandita_kaushal",
+      "target": "prof_professor_yoshihide_wada",
+      "relation": "MATCHED_WITH_92%"
+    },
+    {
+      "source": "prof_professor_yoshihide_wada",
+      "target": "interest_environmental_data_science",
+      "relation": "WORKS_ON"
+    }
+  ],
+  "updated_at": "2026-06-12T23:40:25.420712"
+}
