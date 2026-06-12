@@ -56,8 +56,8 @@
       "properties": {
         "name": "Dr. Tobias Bolch",
         "department": "Institute of Geodesy, Remote Sensing Group",
-        "citations": "—",
-        "h_index": "—"
+        "citations": "27150",
+        "h_index": "75"
       }
     },
     "uni_imperial_college_london": {
@@ -73,8 +73,8 @@
       "properties": {
         "name": "Professor Wouter Buytaert",
         "department": "Department of Civil and Environmental Engineering",
-        "citations": "—",
-        "h_index": "—"
+        "citations": "14425",
+        "h_index": "60"
       }
     },
     "uni_university_of_texas_at_austin": {
@@ -90,8 +90,8 @@
       "properties": {
         "name": "Professor Bridget Scanlon",
         "department": "Bureau of Economic Geology, Jackson School of Geosciences",
-        "citations": "—",
-        "h_index": "—"
+        "citations": "35587",
+        "h_index": "93"
       }
     },
     "uni_university_of_arizona": {
@@ -107,8 +107,8 @@
       "properties": {
         "name": "Professor Jeffrey Kargel",
         "department": "Department of Hydrology and Atmospheric Sciences",
-        "citations": "—",
-        "h_index": "—"
+        "citations": "19918",
+        "h_index": "67"
       }
     },
     "uni_international_institute_for_applied_systems_analysis_iiasa": {
@@ -124,8 +124,8 @@
       "properties": {
         "name": "Professor Yoshihide Wada",
         "department": "Water Security Research Group",
-        "citations": "—",
-        "h_index": "—"
+        "citations": "54534",
+        "h_index": "116"
       }
     }
   },
