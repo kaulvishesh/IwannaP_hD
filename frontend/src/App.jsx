@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import CosmicMap3D from './CosmicMap3D';
+import SupervisorCard from './SupervisorCard';
+import DirectoryDashboard from './DirectoryDashboard';
 
 // Lightweight sound engine replicating GlyphsLabs micro-interactions
 let audioCtx = null;
@@ -43,198 +46,7 @@ const playSuccessSound = () => {
   setTimeout(() => playTone(783.99, 0.22, 0.02, 'sine', 1568.0), 100);
 };
 
-// Redesigned SupervisorCard with self-contained tabs
-function SupervisorCard({ prof, onOpenEmail, playHoverSound, playClickSound }) {
-  const [activeTab, setActiveTab] = useState('outreach'); // 'outreach', 'papers', 'deepdive'
 
-  const score = prof.match_analysis?.score || 0;
-  
-  // Custom color based on compatibility score
-  let scoreColor = '#EF4444'; // default red
-  if (score >= 80) scoreColor = '#10B981'; // emerald green
-  else if (score >= 60) scoreColor = '#6366F1'; // indigo
-  else if (score >= 40) scoreColor = '#F59E0B'; // amber/orange
-
-  return (
-    <div className="card prof-card">
-      <div className="prof-card-header">
-        <div className="prof-meta-container">
-          <h4 className="prof-name">{prof.name}</h4>
-          <span className="prof-uni">{prof.university}</span>
-          {prof.department_or_lab && <span className="prof-lab">{prof.department_or_lab}</span>}
-        </div>
-        <div className="prof-match-badge-v2" style={{ backgroundColor: `${scoreColor}12`, color: scoreColor, border: `1px solid ${scoreColor}30` }}>
-          {score}% Match
-        </div>
-      </div>
-
-      <div className="prof-stats">
-        <div className="prof-stat-item">
-          <span className="stat-label">Citations</span>
-          <span className="stat-value">{prof.citations || '—'}</span>
-        </div>
-        <div className="prof-stat-item">
-          <span className="stat-label">H-Index</span>
-          <span className="stat-value">{prof.h_index || '—'}</span>
-        </div>
-        <div className="prof-stat-item">
-          <span className="stat-label">Works</span>
-          <span className="stat-value">{prof.works_count || '—'}</span>
-        </div>
-      </div>
-
-      <div className="prof-divider" />
-
-      {/* Internal Card Navigation Tabs */}
-      <div className="card-tabs">
-        <button 
-          className={`card-tab-btn ${activeTab === 'outreach' ? 'active' : ''}`}
-          onClick={() => { playClickSound(); setActiveTab('outreach'); }}
-          onPointerOver={playHoverSound}
-        >
-          🎯 Match Info
-        </button>
-        <button 
-          className={`card-tab-btn ${activeTab === 'papers' ? 'active' : ''}`}
-          onClick={() => { playClickSound(); setActiveTab('papers'); }}
-          onPointerOver={playHoverSound}
-        >
-          📚 Papers ({prof.recent_papers?.length || 0})
-        </button>
-        <button 
-          className={`card-tab-btn ${activeTab === 'deepdive' ? 'active' : ''}`}
-          onClick={() => { playClickSound(); setActiveTab('deepdive'); }}
-          onPointerOver={playHoverSound}
-        >
-          🔎 Deep Dive
-        </button>
-      </div>
-
-      {/* Tab Content Panes */}
-      <div className="card-tab-content">
-        {activeTab === 'outreach' && (
-          <div className="tab-pane-outreach animate-fade-in">
-            <div className="compatibility-section">
-              <div className="prof-section-title">Research Compatibility</div>
-              <p className="tab-text overlap-text">
-                {prof.match_analysis?.research_overlap || "Analyzing overlap..."}
-              </p>
-            </div>
-            
-            {prof.match_analysis?.custom_research_direction && (
-              <div className="direction-section" style={{ marginTop: '14px' }}>
-                <div className="prof-section-title">Proposed Direction</div>
-                <p className="tab-text direction-text" style={{ fontStyle: 'italic' }}>
-                  {prof.match_analysis.custom_research_direction}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'papers' && (
-          <div className="tab-pane-papers animate-fade-in">
-            <div className="prof-section-title">Recent Publications (OpenAlex)</div>
-            {prof.recent_papers && prof.recent_papers.length > 0 ? (
-              <ul className="prof-publications">
-                {prof.recent_papers.map((paper, idx) => (
-                  <li key={idx} className="prof-pub-item">
-                    <span className="prof-pub-title">"{paper.title}"</span>
-                    <span className="prof-pub-meta">
-                      Year: {paper.publication_year} | Citations: {paper.cited_by_count || 0} | Source: {paper.journal || 'Unknown/Conference'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="tab-text-empty">No indexed publications found in OpenAlex.</p>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'deepdive' && (
-          <div className="tab-pane-deepdive animate-fade-in">
-            <div className="prof-section-title">Public Sentiment & Social Media Evaluation</div>
-            {prof.deep_dive ? (
-              <div className="deep-dive-grid">
-                <div className="deep-dive-item" onPointerOver={playHoverSound}>
-                  <div className="deep-dive-header">
-                    <span className="deep-dive-label">🌐 Social Presence</span>
-                    <span className="deep-dive-score">{prof.deep_dive.social_presence?.score || 0}/10</span>
-                  </div>
-                  <div className="deep-dive-bar-bg">
-                    <div className="deep-dive-bar-fill" style={{ width: `${(prof.deep_dive.social_presence?.score || 0) * 10}%` }} />
-                  </div>
-                  <p className="deep-dive-desc">{prof.deep_dive.social_presence?.description}</p>
-                </div>
-
-                <div className="deep-dive-item" onPointerOver={playHoverSound}>
-                  <div className="deep-dive-header">
-                    <span className="deep-dive-label">💬 Student Testimony</span>
-                    <span className="deep-dive-score">{prof.deep_dive.student_testimony?.score || 0}/10</span>
-                  </div>
-                  <div className="deep-dive-bar-bg">
-                    <div className="deep-dive-bar-fill" style={{ width: `${(prof.deep_dive.student_testimony?.score || 0) * 10}%` }} />
-                  </div>
-                  <p className="deep-dive-desc">{prof.deep_dive.student_testimony?.description}</p>
-                </div>
-
-                <div className="deep-dive-item" onPointerOver={playHoverSound}>
-                  <div className="deep-dive-header">
-                    <span className="deep-dive-label">🎓 Careers & Placements</span>
-                    <span className="deep-dive-score">{prof.deep_dive.career_placements?.score || 0}/10</span>
-                  </div>
-                  <div className="deep-dive-bar-bg">
-                    <div className="deep-dive-bar-fill" style={{ width: `${(prof.deep_dive.career_placements?.score || 0) * 10}%` }} />
-                  </div>
-                  <p className="deep-dive-desc">{prof.deep_dive.career_placements?.description}</p>
-                </div>
-
-                <div className="deep-dive-item" onPointerOver={playHoverSound}>
-                  <div className="deep-dive-header">
-                    <span className="deep-dive-label">⚖️ Beliefs & Opinions</span>
-                    <span className="deep-dive-score">{prof.deep_dive.personal_beliefs?.score || 0}/10</span>
-                  </div>
-                  <div className="deep-dive-bar-bg">
-                    <div className="deep-dive-bar-fill" style={{ width: `${(prof.deep_dive.personal_beliefs?.score || 0) * 10}%` }} />
-                  </div>
-                  <p className="deep-dive-desc">{prof.deep_dive.personal_beliefs?.description}</p>
-                </div>
-              </div>
-            ) : (
-              <p className="tab-text-empty">No deep-dive sentiment files cached.</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', gap: '12px' }}>
-        <button 
-          className="btn" 
-          style={{ padding: '10px 16px', fontSize: '0.85rem' }}
-          onClick={() => onOpenEmail(prof)}
-          onPointerOver={playHoverSound}
-        >
-          Draft Outreach Proposal
-        </button>
-        
-        {prof.website && (
-          <a 
-            href={prof.website} 
-            target="_blank" 
-            rel="noreferrer" 
-            className="btn btn-secondary"
-            style={{ padding: '10px 16px', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', width: 'auto' }}
-            onPointerOver={playHoverSound}
-            onClick={playClickSound}
-          >
-            Lab Link
-          </a>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Force layout solver for node clustering
 function computeForceLayout(nodesObj, edges, width = 750, height = 480) {
@@ -1267,163 +1079,20 @@ export default function App() {
               </div>
             </div>
 
-            {/* Orbit Constellation SVG Canvas */}
-            <svg viewBox="0 0 1200 800" className="space-svg">
-              {/* Star background patterns */}
-              <defs>
-                <pattern id="dotGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <circle cx="2" cy="2" r="1.2" className="space-svg-grid-dot" />
-                </pattern>
-                <marker id="cosmicArrow" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--gl-gray)" opacity="0.3" />
-                </marker>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#dotGrid)" style={{ opacity: 0.8 }} />
-
-              {/* Orbiting concentric guides */}
-              <circle cx={cx} cy={cy} r="160" fill="none" stroke="var(--gl-border)" strokeWidth="0.8" strokeDasharray="5,8" style={{ opacity: 0.4 }} />
-              <circle cx={cx} cy={cy} r="280" fill="none" stroke="var(--gl-border)" strokeWidth="0.8" strokeDasharray="5,8" style={{ opacity: 0.4 }} />
-              <circle cx={cx} cy={cy} r="410" fill="none" stroke="var(--gl-border)" strokeWidth="0.8" strokeDasharray="5,8" style={{ opacity: 0.4 }} />
-
-              {/* Stellar gravitational edges */}
-              {visibleEdges.map((edge, idx) => {
-                const from = coordsMap[edge.source];
-                const to = coordsMap[edge.target];
-                if (!from || !to) return null;
-
-                const isSelected = selectedNode && (selectedNode.id === edge.source || selectedNode.id === edge.target);
-                const isGraphHovered = hoveredNode !== null;
-                const isEdgeConnectedToHover = hoveredNode && (hoveredNode.id === edge.source || hoveredNode.id === edge.target);
-                
-                const isSearching = searchQuery.trim().length > 0;
-                const isHighlighted = isSearching 
-                  ? filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
-                  : (isGraphHovered ? isEdgeConnectedToHover : isSelected);
-
-                let edgeOpacity = 0.22;
-                if (isSearching) {
-                  edgeOpacity = isHighlighted ? 0.9 : 0.08;
-                } else if (isGraphHovered) {
-                  edgeOpacity = isEdgeConnectedToHover ? 0.9 : 0.04;
-                } else if (isSelected) {
-                  edgeOpacity = 0.95;
-                }
-
-                return (
-                  <line 
-                    key={idx}
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
-                    className={isHighlighted ? "flow-line" : ""}
-                    stroke={isHighlighted ? 'var(--gl-black)' : 'var(--gl-gray)'}
-                    strokeWidth={isHighlighted ? 2.5 : 1}
-                    strokeOpacity={edgeOpacity}
-                    markerEnd="url(#cosmicArrow)"
-                    style={{ transition: 'stroke-opacity 0.2s ease, stroke-width 0.2s ease, stroke 0.2s ease' }}
-                  />
-                );
-              })}
-
-              {/* Candidate Center Star Node */}
-              <g transform={`translate(${cx}, ${cy})`} style={{ cursor: 'pointer' }} onClick={() => { playClickSound(); setSelectedNode(memory.nodes[Object.keys(memory.nodes).find(k => memory.nodes[k].label === 'Candidate')]); }}>
-                <circle r="44" fill="none" stroke="var(--gl-black)" strokeWidth="0.8" strokeDasharray="4,4" className="node-orbit" style={{ opacity: 0.15 }} />
-                <circle r="36" fill="none" stroke="var(--gl-black)" strokeWidth="1.2" strokeDasharray="8,4" className="node-orbit-counter" style={{ opacity: 0.25 }} />
-                
-                <circle 
-                  r="24" 
-                  fill="var(--gl-black)" 
-                  stroke="var(--gl-light)" 
-                  strokeWidth="3.5" 
-                  style={{ filter: 'drop-shadow(0px 0px 15px rgba(0,0,0,0.2))' }}
-                />
-                <text textAnchor="middle" y="5" fontSize="13" fill="var(--gl-light)" fontWeight="bold">☼</text>
-                <text textAnchor="middle" y="-55" fontSize="11" fontWeight="bold" fill="var(--gl-black)" style={{ letterSpacing: '0.05em' }}>
-                  {candidateProfile?.name ? candidateProfile.name.toUpperCase() : "NAVIGATOR"}
-                </text>
-                <text textAnchor="middle" y="-43" fontSize="8" fill="var(--gl-gray)" style={{ letterSpacing: '0.08em' }}>
-                  SUN CORE
-                </text>
-              </g>
-
-              {/* Orbital planet nodes */}
-              {renderedNodes.map((node, idx) => {
-                const isSelected = selectedNode && selectedNode.id === node.id;
-                const isSearching = searchQuery.trim().length > 0;
-                const isFiltered = isSearching && !filteredNodeIds.has(node.id);
-                
-                const isGraphHovered = hoveredNode !== null;
-                const isNeighbor = neighborNodeIds.has(node.id);
-                
-                let nodeOpacity = 1;
-                if (isFiltered) {
-                  nodeOpacity = 0.15;
-                } else if (isGraphHovered && !isNeighbor) {
-                  nodeOpacity = 0.18;
-                }
-
-                const nodeColor = getNodeColor(node.label);
-
-                return (
-                  <g 
-                    key={node.id}
-                    transform={`translate(${node.x}, ${node.y})`}
-                    style={{ cursor: 'pointer' }}
-                    onMouseDown={() => { playClickSound(); setSelectedNode(node); }}
-                    onPointerOver={() => { playHoverSound(); setHoveredNode(node); }}
-                    onPointerOut={() => setHoveredNode(null)}
-                  >
-                    {(isSelected || (hoveredNode && hoveredNode.id === node.id)) && (
-                      <>
-                        <circle r="32" fill="none" stroke={nodeColor} strokeWidth="1.2" strokeDasharray="5,4" className="node-orbit" style={{ opacity: nodeOpacity * 0.7 }} />
-                        <circle r="26" fill="none" stroke={nodeColor} strokeWidth="0.8" strokeDasharray="3,5" className="node-orbit-counter" style={{ opacity: nodeOpacity * 0.5 }} />
-                      </>
-                    )}
-                    
-                    <polygon 
-                      points={isSelected ? "0,-20 20,0 0,20 -20,0" : "0,-14 14,0 0,14 -14,0"}
-                      fill={nodeColor}
-                      stroke="var(--gl-light)"
-                      strokeWidth="3"
-                      style={{ 
-                        opacity: nodeOpacity,
-                        filter: isSelected ? 'drop-shadow(0px 4px 12px rgba(0,0,0,0.3))' : 'drop-shadow(0px 2px 6px rgba(0,0,0,0.12))',
-                        transition: 'points 0.2s ease, opacity 0.2s ease'
-                      }}
-                    />
-                    <text
-                      y="26"
-                      textAnchor="middle"
-                      fontSize="10"
-                      fontWeight={isSelected ? 'bold' : '600'}
-                      fill="var(--gl-black)"
-                      style={{ 
-                        opacity: nodeOpacity,
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                        fontFamily: 'var(--font-sans)',
-                        transition: 'opacity 0.2s ease'
-                      }}
-                    >
-                      {node.properties?.name || node.id}
-                    </text>
-                    {isSelected && (
-                      <text
-                        y="-22"
-                        textAnchor="middle"
-                        fontSize="8"
-                        fontWeight="bold"
-                        fill={nodeColor}
-                        style={{ pointerEvents: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}
-                      >
-                        {node.label}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-            </svg>
+            {/* Orbit Constellation 3D Canvas */}
+            <CosmicMap3D
+              memory={memory}
+              supervisors={supervisors}
+              selectedNode={selectedNode}
+              setSelectedNode={setSelectedNode}
+              hoveredNode={hoveredNode}
+              setHoveredNode={setHoveredNode}
+              searchQuery={searchQuery}
+              getNodeColor={getNodeColor}
+              playClickSound={playClickSound}
+              playHoverSound={playHoverSound}
+              darkMode={darkMode}
+            />
 
             {/* Right HUD Panel: Planetary Inspector */}
             <div className="hud-panel hud-panel-right">
@@ -1524,14 +1193,9 @@ export default function App() {
                                 className="relation-dest" 
                                 onClick={() => { 
                                   playClickSound(); 
-                                  const targetNode = renderedNodes.find(n => n.id === conn.node.id) || (conn.node.label === 'Candidate' ? memory.nodes[conn.node.id] : null);
+                                  const targetNode = memory.nodes[conn.node.id];
                                   if (targetNode) {
-                                    // Map candidate center node correctly
-                                    if (targetNode.label === 'Candidate') {
-                                      setSelectedNode({ id: conn.node.id, label: 'Candidate', properties: conn.node.properties });
-                                    } else {
-                                      setSelectedNode(targetNode);
-                                    }
+                                    setSelectedNode(targetNode);
                                   }
                                 }}
                               >
@@ -1647,45 +1311,23 @@ export default function App() {
 
               </div>
 
-              {/* Main Column: directory or memory graph */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                {activeMainTab === 'directory' ? (
-                  <>
-                    <h3 className="card-title" style={{ marginBottom: '0px' }}>
-                      {supervisors.length > 0 ? `Matched Supervisors (${supervisors.length})` : "Matched Directory"}
-                    </h3>
-                    
-                    {supervisors.length === 0 ? (
-                      <div className="card" style={{ textAlign: 'center', padding: '80px', color: 'var(--gl-gray)', display: 'flex', flexDirection: 'column', justify: 'center', alignItems: 'center', minHeight: '350px' }}>
-                        <span style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</span>
-                        Awaiting candidate portfolio upload to begin search...
-                      </div>
-                    ) : (
-                      <div className="results-grid">
-                        {supervisors.map((prof) => (
-                          <SupervisorCard 
-                            key={prof.id} 
-                            prof={prof} 
-                            onOpenEmail={openEmailModal} 
-                            playHoverSound={playHoverSound} 
-                            playClickSound={playClickSound} 
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <h3 className="card-title" style={{ marginBottom: '0px' }}>
-                      Knowledge Memory Graph
-                    </h3>
-                    <MemoryGraphView 
-                      memory={memory} 
-                      playClickSound={playClickSound} 
-                      playHoverSound={playHoverSound} 
-                    />
-                  </>
-                )}
+              {/* Main Column: directory dashboard */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, minWidth: 0 }}>
+                <DirectoryDashboard
+                  supervisors={supervisors}
+                  openEmailModal={openEmailModal}
+                  playClickSound={playClickSound}
+                  playHoverSound={playHoverSound}
+                  darkMode={darkMode}
+                  activeMainTab={activeMainTab}
+                  setActiveMainTab={setActiveMainTab}
+                >
+                  <MemoryGraphView 
+                    memory={memory} 
+                    playClickSound={playClickSound} 
+                    playHoverSound={playHoverSound} 
+                  />
+                </DirectoryDashboard>
               </div>
 
             </div>
