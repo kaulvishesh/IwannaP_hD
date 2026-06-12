@@ -74,6 +74,10 @@ def query_gemini(prompt: str, system_prompt: str = "", model: str = DEFAULT_GEMI
             except Exception:
                 pass
                 
+            if e.code == 429 and use_search:
+                print("[!] Google Search grounding rate-limited or quota exceeded (HTTP 429). Falling back to standard LLM generation...")
+                return query_gemini(prompt, system_prompt=system_prompt, model=model, use_search=False, json_mode=json_mode)
+                
             if e.code in [503, 429] and attempt < max_retries - 1:
                 sleep_time = 5.0 * (attempt + 1)
                 if error_body:
