@@ -34,17 +34,21 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   transition: background-color 0.4s ease, color 0.4s ease;
+  background-image: radial-gradient(rgba(33, 33, 33, 0.04) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
 }
 
 /* Dark mode theme variables applied based on class */
 body.dark-mode {
-  background-color: #141414;
+  background-color: #0c0e14;
   color: #F2F2F2;
   --gl-black: #F2F2F2;
-  --gl-light: #141414;
+  --gl-light: #0c0e14;
   --gl-gray: #9D9D9D;
-  --gl-border: rgba(255, 255, 255, 0.08);
-  --gl-card-bg: rgba(25, 25, 25, 0.65);
+  --gl-border: rgba(255, 255, 255, 0.05);
+  --gl-card-bg: rgba(15, 18, 26, 0.72);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
 }
 
 ::selection {
@@ -241,17 +245,34 @@ body.dark-mode .app-header {
   border: 1px solid var(--gl-border);
   border-radius: 12px;
   padding: 32px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.015);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: radial-gradient(circle at top left, rgba(139, 92, 246, 0.02), transparent 60%);
+  pointer-events: none;
 }
 
 .card:hover {
-  border-color: rgba(33, 33, 33, 0.2);
+  border-color: rgba(33, 33, 33, 0.18);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.035);
+  transform: translateY(-2px);
 }
 
 body.dark-mode .card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.08);
 }
 
 .card-title {
@@ -1128,5 +1149,34 @@ body.dark-mode .relation-badge {
 .relation-dest:hover {
   opacity: 0.7;
   text-decoration: underline;
+}
+
+/* Constellation Edge Flow & Orbit Rotation */
+@keyframes edgeFlow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.flow-line {
+  stroke-dasharray: 6, 4;
+  animation: edgeFlow 0.8s linear infinite;
+}
+
+@keyframes orbitClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.node-orbit {
+  transform-origin: center;
+  animation: orbitClockwise 25s linear infinite;
+  pointer-events: none;
+}
+
+.node-orbit-counter {
+  transform-origin: center;
+  animation: orbitClockwise 15s linear infinite reverse;
+  pointer-events: none;
 }
 

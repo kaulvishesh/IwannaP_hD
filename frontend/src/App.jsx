@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 // Lightweight sound engine replicating GlyphsLabs micro-interactions
 let audioCtx = null;
-const playTone = (freq, dur, vol, type = 'sine') => {
+const playTone = (freq, dur, vol, type = 'sine', sweepFreq = null) => {
   try {
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -14,10 +14,17 @@ const playTone = (freq, dur, vol, type = 'sine') => {
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
+    
     osc.type = type;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if (sweepFreq) {
+      // Rapid frequency sweep to produce a "crunchy" click pop
+      osc.frequency.exponentialRampToValueAtTime(sweepFreq, audioCtx.currentTime + dur * 0.35);
+    }
+    
     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    
     osc.start();
     osc.stop(audioCtx.currentTime + dur);
   } catch (err) {
@@ -25,15 +32,15 @@ const playTone = (freq, dur, vol, type = 'sine') => {
   }
 };
 
-const playHoverSound = () => playTone(1100, 0.025, 0.015, 'sine');
+const playHoverSound = () => playTone(1200, 0.012, 0.008, 'triangle', 700);
 const playClickSound = () => {
-  playTone(660, 0.08, 0.04, 'sine');
-  setTimeout(() => playTone(990, 0.04, 0.02, 'sine'), 30);
+  playTone(800, 0.03, 0.025, 'triangle', 150);
+  setTimeout(() => playTone(1600, 0.015, 0.012, 'sine'), 10);
 };
 const playSuccessSound = () => {
-  playTone(523.25, 0.15, 0.05, 'sine'); // C5
-  setTimeout(() => playTone(659.25, 0.15, 0.05, 'sine'), 80); // E5
-  setTimeout(() => playTone(783.99, 0.3, 0.05, 'sine'), 160); // G5
+  playTone(523.25, 0.12, 0.02, 'sine', 1046.5);
+  setTimeout(() => playTone(659.25, 0.12, 0.02, 'sine', 1318.5), 50);
+  setTimeout(() => playTone(783.99, 0.22, 0.02, 'sine', 1568.0), 100);
 };
 
 // Redesigned SupervisorCard with self-contained tabs
@@ -504,6 +511,7 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
                     y1={from.y} 
                     x2={to.x} 
                     y2={to.y} 
+                    className={isHighlighted ? "flow-line" : ""}
                     stroke={isHighlighted ? 'var(--gl-black)' : 'var(--gl-gray)'}
                     strokeWidth={isHighlighted ? 2.5 : 1.2}
                     strokeOpacity={edgeOpacity}
@@ -554,15 +562,39 @@ function MemoryGraphView({ memory, playClickSound, playHoverSound }) {
                   onPointerOver={() => { playHoverSound(); setHoveredNode(node); }}
                   onPointerOut={() => setHoveredNode(null)}
                 >
-                  <circle 
-                    r={isSelected ? 20 : 15} 
+                  {/* Rotating orbital grids for hovered or selected node */}
+                  {(isSelected || (hoveredNode && hoveredNode.id === node.id)) && (
+                    <>
+                      <circle 
+                        r="34" 
+                        fill="none" 
+                        stroke={nodeColor} 
+                        strokeWidth="1.2" 
+                        strokeDasharray="5,4" 
+                        className="node-orbit"
+                        style={{ opacity: nodeOpacity * 0.7 }}
+                      />
+                      <circle 
+                        r="28" 
+                        fill="none" 
+                        stroke={nodeColor} 
+                        strokeWidth="0.8" 
+                        strokeDasharray="3,5" 
+                        className="node-orbit-counter"
+                        style={{ opacity: nodeOpacity * 0.5 }}
+                      />
+                    </>
+                  )}
+                  {/* Diamond shape representing a stellar space coordinate */}
+                  <polygon 
+                    points={isSelected ? "0,-22 22,0 0,22 -22,0" : "0,-16 16,0 0,16 -16,0"}
                     fill={nodeColor} 
                     stroke="var(--gl-light)" 
-                    strokeWidth="3.5"
+                    strokeWidth="3.2"
                     style={{ 
                       opacity: nodeOpacity,
-                      filter: isSelected ? 'drop-shadow(0px 4px 12px rgba(0,0,0,0.25))' : 'drop-shadow(0px 2px 6px rgba(0,0,0,0.12))',
-                      transition: 'r 0.2s ease, opacity 0.2s ease'
+                      filter: isSelected ? 'drop-shadow(0px 4px 12px rgba(0,0,0,0.3))' : 'drop-shadow(0px 2px 6px rgba(0,0,0,0.15))',
+                      transition: 'points 0.2s ease, opacity 0.2s ease, fill 0.2s ease'
                     }}
                   />
                   <text
