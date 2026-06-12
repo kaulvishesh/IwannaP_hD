@@ -116,7 +116,7 @@ def query_gemini_json_with_search(prompt: str, system_prompt: str = "") -> dict:
         "You are an expert data parser. Parse the provided research report and format the output into a clean JSON object. "
         "Strictly follow the requested JSON schema. Do not output any conversational text, markdown code blocks, or explanations."
     )
-    format_prompt = f"Research Report:\n{research_report}\n\nOriginal Request details and schema requirements:\n{prompt}"
+    format_prompt = f"Research Report:\n{research_report}\n\nOriginal Request details and schema requirements:\n{prompt}\n{system_prompt}"
     
     json_response = query_gemini(format_prompt, system_prompt=format_system_prompt, use_search=False, json_mode=True)
     return extract_json_block(json_response)
